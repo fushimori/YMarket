@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Корзина</title>
+    <link rel="stylesheet" href="/static/cart.css">
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const email = "{{ email }}"; // Email из шаблона
+
+            try {
+                // Получение ID пользователя
+                const userIdResponse = await fetch(`http://localhost:8001/get_user_id?email=${email}`);
+                if (!userIdResponse.ok) throw new Error('Не удалось получить ID пользователя');
+                const { user_id } = await userIdResponse.json();
+
+                // Получение товаров корзины
+                const cartResponse = await fetch(`http://localhost:8004/cart/${user_id}`);
+                if (!cartResponse.ok) throw new Error('Не удалось получить товары корзины');
+                const cartItems = await cartResponse.json();
+
+                // Информация о каждом товаре
+                for (const item of cartItems) {
+                    const productResponse = await fetch(`http://localhost:8003/api/get_product?id=${item.product_id}`);
+                    if (productResponse.ok) {
+                        const product = await productResponse.json();
+                        item.product_name = product.name;
+                        item.product_image = product.image_url || 'https://www.iephb.ru/wp-content/uploads/2021/01/img-placeholder.png';
+                    }
+                }
+
+                renderCart(cartItems);
+            } catch (error) {
+                console.error('Ошибка:', error);
+                renderCart([]);
+            }
+        });
+
+        function renderCart(cartItems) {
+            const cartContainer = document.getElementById('cartContainer');
+            cartContainer.innerHTML = `
+                <header>
+                    <div>
+                        <h1>Lakomka</h1>
+                    </div>
+                    <div>
+                        <a href="/">Главная</a>
+                        <a href="/logout">Выйти</a>
+                    </div>
+                </header>
+                <div class="container">
+                    <div class="cart-info">
+                        <h1>Ваша корзина</h1>
+                    </div>
+                    <div class="items-grid">
+                        ${cartItems.length > 0 ? cartItems.map(item => `
+                            <div class="item-card">
+                                <img src="${item.product_image}" alt="${item.product_name}">
+                                <p><strong>Название:</strong> ${item.product_name}</p>
+                                <p><strong>Количество:</strong> ${item.quantity}</p>
+                                <button class="delete-button" onclick="deleteItem(${item.product_id}, 'YOUR_TOKEN_HERE')">Delete</button>
+                            </div>
+                        `).join('') : '<p class="empty-message">Ваша корзина пуста</p>'}
+                    </div>
+                </div>
+
+                <!-- Кнопка для создания заказа -->
+                ${cartItems.length > 0 ? `
+                    <div class="order-button">
+                        <button class="create-order-btn" onclick="createOrder()">Создать заказ</button>
+                    </div>
+                ` : ''}
+            `;
+        }
+
+        async function deleteItem(productId, token) {
+            try {
+                const token = "{{ token }}";  // Ваш токен
+                console.log("JWT Token:", token);
+                const response = await fetch(`http://localhost:8004/cart/delete?product_id=${productId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                if (!response.ok) {
+                    throw new Error('Failed to delete item');
+                }
+                // После успешного удаления обновляем корзину
+                location.reload(); // Перезагружаем страницу, чтобы обновить список товаров
+            } catch (error) {
+                console.error('Error deleting item:', error);
+                alert('Failed to delete item');
+            }
+        }
+
+        async function createOrder() {
+            try {
+                const token = "{{ token }}";  // Ваш токен
+                console.log("JWT Token create token:", token);
+                // Шаг 1: Отправляем запрос на создание заказа
+                const createOrderResponse = await fetch(`http://localhost:8004/cart/createorder`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer {{ token }}`
+                    }
+                });
+                if (!createOrderResponse.ok) {
+                    throw new Error('Failed to create order');
+                }
+
+                const orderData = await createOrderResponse.json();
+                console.log('Order created successfully:', orderData);
+
+                // Шаг 2: Обновляем страницу или выполняем другие действия
+                location.reload(); // Перезагружаем страницу, чтобы отобразить изменения
+            } catch (error) {
+                console.error('Error creating order:', error);
+                alert('Failed to create order');
+            }
+        }
+    </script>
+</head>
+<body>
+    <div id="cartContainer"></div>
+</body>
+</html>

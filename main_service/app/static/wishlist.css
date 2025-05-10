@@ -1,0 +1,142 @@
+/* Основные стили для страницы профиля */
+body {
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f5faff;
+    color: #333;
+}
+
+header {
+    background-color: #007bff;
+    color: white;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+header a {
+    color: white;
+    text-decoration: none;
+    margin-left: 15px;
+    font-size: 16px;
+}
+
+header a:hover {
+    text-decoration: underline;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 0 15px;
+}
+
+/* Стили для информации о профиле */
+.profile-info {
+    background-color: white;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease-in-out;
+}
+
+.profile-info:hover {
+    transform: translateY(-5px);
+}
+
+.profile-info h1 {
+    font-size: 28px;
+    margin-bottom: 15px;
+    color: #007bff;
+    text-align: center;
+}
+
+.profile-info p {
+    font-size: 16px;
+    margin-bottom: 10px;
+    line-height: 1.6;
+}
+
+/* Стили для кнопок "Wishlist" и "Orders" */
+.wishlist-button, .orders-button {
+    display: inline-block;
+    padding: 12px 30px;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    cursor: pointer;
+    border: none;
+    font-size: 18px;
+    margin: 10px 15px;
+    transition: background-color 0.3s ease-in-out;
+    text-align: center;
+}
+
+.wishlist-button {
+    background-color: #0069d9; /* Темный синий для "Wishlist" */
+}
+
+.wishlist-button:hover {
+    background-color: #0056b3; /* Более темный синий при наведении */
+}
+
+.orders-button {
+    background-color: #007bff; /* Основной синий для "Orders" */
+}
+
+.orders-button:hover {
+    background-color: #0056b3; /* Темно-синий при наведении */
+}
+
+/* Стили для списка товаров wishlist */
+.wishlist-info ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.wishlist-info li {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    margin-bottom: 20px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease-in-out;
+}
+
+.wishlist-info li:hover {
+    transform: translateY(-5px);
+}
+
+.wishlist-info li img.product-image {
+    width: 80px;
+    height: 80px;
+    border-radius: 5px;
+    margin-right: 20px;
+}
+
+.wishlist-info li strong {
+    font-size: 18px;
+}
+
+/* Адаптивные стили */
+@media (max-width: 768px) {
+    .button, .wishlist-button, .orders-button {
+        padding: 10px 18px;
+        font-size: 16px;
+    }
+
+    .wishlist-info li {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .wishlist-info li img.product-image {
+        margin-bottom: 15px;
+    }
+}

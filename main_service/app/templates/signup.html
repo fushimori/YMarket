@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Регистрация</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <h1>Регистрация</h1>
+    <form action="/register" method="POST">
+        <input type="text" name="email" placeholder="Электронная почта" required>
+        <input type="password" name="password" placeholder="Пароль" required>
+        <button type="submit">Зарегистрироваться</button>
+        {% if success %}
+            <p style="color: green;">{{ success }}</p>
+        {% endif %}
+        {% if error %}
+            <p style="color: red;">{{ error }}</p>
+        {% endif %}
+    </form>
+    <a href="/">Вернуться на главную</a>
+</body>
+</html>

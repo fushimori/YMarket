@@ -1,0 +1,92 @@
+/* Основные стили */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f5faff;
+    color: #333;
+}
+
+header {
+    background-color: #007bff;
+    color: white;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+header a {
+    color: white;
+    text-decoration: none;
+    margin-left: 15px;
+}
+
+header a:hover {
+    text-decoration: underline;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 0 15px;
+}
+
+/* Профиль */
+.profile-info {
+    background-color: white;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.profile-info h1 {
+    font-size: 24px;
+    margin-bottom: 10px;
+    color: #007bff;
+}
+
+.profile-info p {
+    font-size: 16px;
+    margin-bottom: 10px;
+}
+
+/* Кнопки */
+.wishlist-button, .orders-button {
+    display: inline-block;
+    padding: 12px 25px;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    font-size: 18px;
+    margin: 10px 15px;
+    text-align: center;
+    cursor: pointer;
+    border: none;
+}
+
+.wishlist-button {
+    background-color: #0069d9;
+}
+
+.wishlist-button:hover {
+    background-color: #0056b3;
+}
+
+.orders-button {
+    background-color: #007bff;
+}
+
+.orders-button:hover {
+    background-color: #0056b3;
+}
+
+/* Адаптивные стили */
+@media (max-width: 768px) {
+    .wishlist-button, .orders-button {
+        padding: 10px 18px;
+        font-size: 16px;
+    }
+}

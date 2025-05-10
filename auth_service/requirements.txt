@@ -1,0 +1,12 @@
+fastapi
+uvicorn
+pydantic
+python-multipart
+bcrypt>=3.1.7
+passlib[bcrypt]>=1.7.4
+pyjwt==2.10.1
+sqlalchemy[asyncio]
+asyncpg
+alembic
+python-dotenv
+asyncio

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wishlist</title>
+    <link rel="stylesheet" href="/static/wishlist.css">
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const email = "{{ email }}";  // Получаем email из шаблона
+            fetchWishlistData(email);
+        });
+
+        async function fetchWishlistData(email) {
+            try {
+                // Запрос данных профиля пользователя, включая wishlist
+                const response = await fetch(`http://localhost:8001/profile?email=${email}`);
+                if (!response.ok) {
+                    throw new Error('Не удалось загрузить данные wishlist');
+                }
+                const profileData = await response.json();
+                
+                // Для каждого продукта в wishlist получаем название и изображение
+                const updatedWishlist = await Promise.all(profileData.wishlist.map(async (item) => {
+                    const productResponse = await fetch(`http://localhost:8003/api/get_product?id=${item.product_id}`);
+                    if (productResponse.ok) {
+                        const product = await productResponse.json();
+                        return {
+                            product_id: item.product_id,
+                            product_name: product.name,
+                            product_image: product.image_url || 'https://www.iephb.ru/wp-content/uploads/2021/01/img-placeholder.png' // изображение по умолчанию, если его нет
+                        };
+                    } else {
+                        return item; // если не удалось получить продукт, возвращаем как есть
+                    }
+                }));
+
+                // Отображаем обновлённый wishlist с названиями и изображениями
+                renderWishlist(updatedWishlist);
+            } catch (error) {
+                console.error('Ошибка при загрузке данных wishlist:', error);
+                const wishlistContainer = document.getElementById('wishlistContainer');
+                wishlistContainer.innerHTML = `<p style="color: red;">Ошибка загрузки данных wishlist. Попробуйте снова позже.</p>`;
+            }
+        }
+
+        function renderWishlist(wishlistData) {
+            const wishlistContainer = document.getElementById('wishlistContainer');
+            wishlistContainer.innerHTML = `
+                <header>
+                    <div><h1>Lakomka</h1></div>
+                    <div>
+                        <a href="/">Главная</a>
+                        <a href="/logout">Выйти</a>
+                    </div>
+                </header>
+                <div class="wishlist-info">
+                    <h1>Ваш список желаемого</h1>
+                    ${wishlistData && wishlistData.length > 0 ? ` 
+                        <ul>
+                            ${wishlistData.map(item => `
+                                <li>
+                                    <img src="${item.product_image}" alt="${item.product_name}" class="product-image"/>
+                                    <strong>${item.product_name}</strong>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    ` : '<p>Ваш список желаемого пуст.</p>'}
+                </div>
+            `;
+        }
+    </script>
+</head>
+<body>
+    <div id="wishlistContainer"></div>
+</body>
+</html>

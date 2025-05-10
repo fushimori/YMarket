@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Computer Shop</title>
+    <link rel="stylesheet" href="/static/index.css">
+</head>
+<body>
+    <header>
+        <div>
+            <h1>Lakomka</h1>
+        </div>
+        <div>
+            {% if email %}
+            <a href="/profile">Профиль</a>
+            <a href="/logout">Выйти</a>
+            {% else %}
+                <a href="/login">Вход</a>
+                <a href="/signup">Регистрация</a>
+            {% endif %}
+            <a href="/cart">Корзина</a>
+        </div>
+    </header>
+    <div class="container">
+        <div class="search-bar">
+            <input type="text" id="search" placeholder="Поиск товаров...">
+            <button onclick="searchProducts()">Искать</button>
+        </div>
+        <div class="filters">
+            <label for="categories">Выберите категорию:</label>
+            <select id="categories" onchange="filterProducts()">
+                <option value="">Все товары</option>
+            </select>
+        </div>
+        <div class="product-grid" id="productGrid"></div>
+    </div>
+
+    <script>
+document.addEventListener('DOMContentLoaded', () => {
+    loadCategories();
+    loadProducts();
+});
+
+async function loadCategories() {
+    try {
+        const response = await fetch('http://localhost:8003/api/categories');
+        const categories = await response.json();
+        const categoriesSelect = document.getElementById('categories');
+        categories.forEach(category => {
+            const option = document.createElement('option');
+            option.value = category.id;
+            option.textContent = category.name;
+            categoriesSelect.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Ошибка загрузки категорий:', error);
+    }
+}
+
+async function loadProducts(categoryId = null, searchQuery = '') {
+    try {
+        let url = 'http://localhost:8003/api/products';
+        const queryParams = [];
+        if (searchQuery) queryParams.push(`search=${searchQuery}`);
+        if (categoryId) queryParams.push(`category=${categoryId}`);
+        if (queryParams.length) url += '?' + queryParams.join('&');
+
+        const response = await fetch(url);
+        const products = await response.json();
+        const productGrid = document.getElementById('productGrid');
+        productGrid.innerHTML = '';
+
+        products.forEach(product => {
+            const productElement = document.createElement('div');
+            productElement.className = 'product';
+            productElement.innerHTML = `
+                <img src="${product.image || 'https://www.iephb.ru/wp-content/uploads/2021/01/img-placeholder.png'}" alt="${product.name}">
+                <h3>${product.name}</h3>
+                <p>${product.price} ₽</p>
+            `;
+            productElement.addEventListener('click', () => {
+                window.location.href = `product?id=${product.id}`;
+            });
+            productGrid.appendChild(productElement);
+        });
+    } catch (error) {
+        console.error('Ошибка загрузки товаров:', error);
+    }
+}
+
+function filterProducts() {
+    const categoryId = document.getElementById('categories').value;
+    const searchQuery = document.getElementById('search').value;
+    loadProducts(categoryId, searchQuery);
+}
+
+function searchProducts() {
+    const searchQuery = document.getElementById('search').value;
+    const categoryId = document.getElementById('categories').value;
+    loadProducts(categoryId, searchQuery);
+}
+</script>
+</body>
+</html>

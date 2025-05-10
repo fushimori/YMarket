@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+jinja2
+httpx
+python-multipart
+uuid
+pyjwt==2.10.1

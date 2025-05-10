@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Заказы</title>
+    <link rel="stylesheet" href="/static/orders.css">
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const email = "{{ email }}";  // Получаем email из шаблона
+            fetchOrdersData(email);
+        });
+
+        async function fetchOrdersData(email) {
+            try {
+                // Запрос данных профиля пользователя, включая заказы
+                const response = await fetch(`http://localhost:8001/profile?email=${email}`);
+                if (!response.ok) {
+                    throw new Error('Не удалось загрузить данные заказов');
+                }
+                const profileData = await response.json();
+
+                // Для каждого товара в заказах получаем название и изображение
+                const updatedOrders = await Promise.all(profileData.orders.map(async (order) => {
+                    const updatedItems = await Promise.all(order.items.map(async (item) => {
+                        const productResponse = await fetch(`http://localhost:8003/api/get_product?id=${item.product_id}`);
+                        if (productResponse.ok) {
+                            const product = await productResponse.json();
+                            return {
+                                product_id: item.product_id,
+                                product_name: product.name,
+                                product_image: product.image_url || 'https://www.iephb.ru/wp-content/uploads/2021/01/img-placeholder.png', // изображение по умолчанию
+                                quantity: item.quantity
+                            };
+                        } else {
+                            return item; // если не удалось получить товар, возвращаем как есть
+                        }
+                    }));
+
+                    return {
+                        ...order,
+                        items: updatedItems
+                    };
+                }));
+
+                // Отображаем обновлённые заказы с названиями и изображениями товаров
+                renderOrders(updatedOrders);
+            } catch (error) {
+                console.error('Ошибка при загрузке данных заказов:', error);
+                const ordersContainer = document.getElementById('ordersContainer');
+                ordersContainer.innerHTML = `<p style="color: red;">Ошибка загрузки данных заказов. Попробуйте снова позже.</p>`;
+            }
+        }
+
+        function renderOrders(ordersData) {
+            const ordersContainer = document.getElementById('ordersContainer');
+            ordersContainer.innerHTML = `
+                <header>
+                    <div><h1>Lakomka</h1></div>
+                    <div>
+                        <a href="/">Главная</a>
+                        <a href="/logout">Выйти</a>
+                    </div>
+                </header>
+                <div class="orders-info">
+                    <h1>Ваши Заказы</h1>
+                    ${ordersData && ordersData.length > 0 ? ` 
+                        <ul>
+                            ${ordersData.map(order => `
+                                <li>
+                                    <p>Заказ №${order.order_id} (Статус: ${order.status})</p>
+                                    ${order.items && order.items.length > 0 ? `
+                                        <ul>
+                                            ${order.items.map(item => `
+                                                <li>
+                                                    <div class="product-details">
+                                                        <img src="${item.product_image}" alt="${item.product_name}" class="product-image"/>
+                                                        <div>
+                                                            <strong>Название:</strong> ${item.product_name}<br>
+                                                            <strong>Количество:</strong> ${item.quantity}
+                                                        </div>
+                                                    </div>
+                                                </li>
+                                            `).join('')}
+                                        </ul>
+                                    ` : '<p>Нет товаров в этом заказе.</p>'}
+                                </li>
+                            `).join('')}
+                        </ul>
+                    ` : '<p>У вас нет заказов.</p>'}
+                </div>
+            `;
+        }
+    </script>
+</head>
+<body>
+    <div id="ordersContainer"></div>
+</body>
+</html>

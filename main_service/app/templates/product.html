@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Информация о товаре</title>
+    <link rel="stylesheet" href="/static/product.css">
+</head>
+<body>
+    <div class="product-container">
+        <img id="product-image" src="" alt="Изображение товара" class="product-image">
+        <div id="product-title" class="product-title">Загрузка...</div>
+        <div id="product-price" class="product-price"></div>
+        <div id="product-description" class="product-description"></div>
+        <div id="product-seller" class="product-seller"></div>
+        <button id="add-to-cart-btn" disabled>Проверка корзины...</button>
+        <div id="cart-message"></div>
+        <a href="http://localhost:8000/">Назад к товарам</a>
+    </div>
+
+    <script>
+        async function fetchProductInfo() {
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                const productId = urlParams.get('id');
+                if (!productId) throw new Error('ID товара не указан в URL');
+
+                // Получаем данные товара
+                const productResponse = await fetch(`http://localhost:8003/api/get_product?id=${productId}`);
+                if (!productResponse.ok) throw new Error('Ошибка при загрузке данных о товаре');
+                const product = await productResponse.json();
+
+                // Получаем данные продавца
+                const sellerResponse = await fetch(`http://localhost:8003/api/get_seller?id=${product.seller_id}`);
+                if (!sellerResponse.ok) throw new Error('Ошибка при загрузке данных о продавце');
+                const seller = await sellerResponse.json();
+
+                // Обновляем DOM
+                document.getElementById('product-image').src = product.image_url || 'https://www.iephb.ru/wp-content/uploads/2021/01/img-placeholder.png';
+                document.getElementById('product-title').textContent = product.name;
+                document.getElementById('product-price').textContent = `Всего за ${product.price} рублей`;
+                document.getElementById('product-description').textContent = product.description;
+                document.getElementById('product-seller').textContent = `Продавец: ${seller.name}`;
+
+                // Проверяем корзину
+                await checkCart(productId);
+            } catch (error) {
+                console.error('Ошибка:', error);
+                document.getElementById('product-title').textContent = 'Ошибка при загрузке данных о товаре';
+            }
+        }
+
+        async function checkCart(productId) {
+            try {
+                const token = "{{ token }}";
+                const response = await fetch(`http://localhost:8004/check_cart?product_id=${productId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!response.ok) throw new Error('Ошибка при проверке корзины');
+                const result = await response.json();
+
+                const addToCartBtn = document.getElementById('add-to-cart-btn');
+                const cartMessage = document.getElementById('cart-message');
+
+                if (result.exists) {
+                    addToCartBtn.disabled = true;
+                    addToCartBtn.textContent = 'Товар в корзине';
+                    cartMessage.textContent = 'Этот товар уже находится в вашей корзине.';
+                } else {
+                    addToCartBtn.disabled = false;
+                    addToCartBtn.textContent = 'Добавить в корзину';
+                    addToCartBtn.onclick = () => addToCart(productId);
+                }
+            } catch (error) {
+                console.error('Ошибка:', error);
+                document.getElementById('cart-message').textContent = 'Ошибка при проверке корзины.';
+            }
+        }
+
+        async function addToCart(productId) {
+            try {
+                const token = "{{ token }}";
+                const response = await fetch(`http://localhost:8004/cart/add?product_id=${productId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!response.ok) throw new Error('Ошибка при добавлении товара в корзину');
+                const result = await response.json();
+
+                const cartMessage = document.getElementById('cart-message');
+                if (result.success) {
+                    document.getElementById('add-to-cart-btn').disabled = true;
+                    document.getElementById('add-to-cart-btn').textContent = 'Товар в корзине';
+                    cartMessage.textContent = 'Товар успешно добавлен в корзину!';
+                } else {
+                    cartMessage.textContent = 'Что-то пошло не так. Попробуйте ещё раз.';
+                }
+            } catch (error) {
+                console.error('Ошибка:', error);
+                document.getElementById('cart-message').textContent = 'Ошибка при добавлении товара в корзину.';
+            }
+        }
+
+        window.onload = fetchProductInfo;
+    </script>
+</body>
+</html>

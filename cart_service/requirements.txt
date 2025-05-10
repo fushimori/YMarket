@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+pydantic
+sqlalchemy[asyncio]
+asyncpg
+alembic
+pyjwt==2.10.1
+python-dotenv
+requests

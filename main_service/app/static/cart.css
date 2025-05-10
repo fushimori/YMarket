@@ -1,0 +1,130 @@
+/* Основные стили */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f5faff;
+    color: #333;
+}
+
+header {
+    background-color: #007bff;
+    color: #fff;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+header a {
+    color: #fff;
+    text-decoration: none;
+    margin-left: 15px;
+    font-weight: bold;
+    transition: color 0.3s;
+}
+
+header a:hover {
+    color: #d1e8ff;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 0 15px;
+}
+
+/* Информация о корзине */
+.cart-info {
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.cart-info h1 {
+    font-size: 28px;
+    margin: 0;
+    color: #007bff;
+}
+
+/* Карточки товаров */
+.items-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+}
+
+.item-card {
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 15px;
+    width: calc(33.333% - 20px); /* Три карточки в ряд */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    text-align: center;
+}
+
+.item-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+.item-card p {
+    margin: 10px 0;
+    font-size: 16px;
+    color: #333;
+}
+
+.item-card img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+/* Пустая корзина */
+.empty-message {
+    text-align: center;
+    font-size: 24px;
+    font-weight: bold;
+    color: #888;
+    padding: 50px;
+}
+
+/* Кнопка "Создать заказ" */
+.order-button {
+    text-align: center;
+    margin: 20px 0;
+}
+
+.create-order-btn {
+    background-color: #007bff; /* Синий цвет */
+    color: #fff;
+    border: none;
+    padding: 12px 24px;
+    font-size: 18px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.create-order-btn:hover {
+    background-color: #0056b3; /* Темно-синий цвет при наведении */
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .item-card {
+        width: calc(50% - 20px); /* Две карточки в ряд */
+    }
+}
+
+@media (max-width: 480px) {
+    .item-card {
+        width: 100%; /* Одна карточка в ряд */
+    }
+}

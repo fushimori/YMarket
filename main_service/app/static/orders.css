@@ -1,0 +1,99 @@
+/* Основные стили */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f5faff;
+    color: #333;
+}
+
+header {
+    background-color: #007bff;
+    color: white;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+header a {
+    color: white;
+    text-decoration: none;
+    margin-left: 15px;
+}
+
+header a:hover {
+    text-decoration: underline;
+}
+
+/* Стили для списка заказов */
+.orders-info {
+    background-color: white;
+    border-radius: 5px;
+    padding: 20px;
+    margin: 20px auto;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    max-width: 900px;
+}
+
+.orders-info h1 {
+    font-size: 28px;
+    margin-bottom: 20px;
+    color: #007bff;
+    text-align: center;
+}
+
+.orders-info ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.orders-info li {
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.orders-info li p {
+    margin: 10px 0;
+    font-size: 16px;
+}
+
+.orders-info li ul {
+    margin-top: 15px;
+    padding-left: 20px;
+}
+
+.orders-info li ul li {
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+
+.orders-info li .product-image {
+    width: 150px;  /* Увеличена ширина изображения */
+    height: auto;
+    border-radius: 5px;
+    margin-bottom: 15px;  /* Отступ между изображением и описанием */
+}
+
+/* Адаптивные стили */
+@media (max-width: 768px) {
+    .orders-info h1 {
+        font-size: 22px;
+    }
+
+    .orders-info li {
+        font-size: 14px;
+    }
+
+    .orders-info li .product-image {
+        width: 120px; /* Меньший размер изображения для мобильных */
+        margin-bottom: 10px;
+    }
+}

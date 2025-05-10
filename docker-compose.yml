@@ -1,0 +1,139 @@
+services:
+  main_service:
+    build: ./main_service
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./main_service/app:/app
+    networks:
+      - mynetwork
+
+  auth_service:
+    build: ./auth_service
+    ports:
+      - "8001:8001"
+    depends_on:
+      - auth_db
+    environment:
+      - AUTH_DB_USER=auth_user
+      - AUTH_DB_PASSWORD=auth_pass
+      - AUTH_DB_NAME=auth_db
+      - AUTH_DB_HOST=auth_db
+      - AUTH_DB_PORT=5432
+    volumes:
+      - ./auth_service/app:/app
+    networks:
+      - mynetwork
+
+  catalog_service:
+    build: ./catalog_service
+    ports:
+      - "8003:8003"
+    depends_on:
+      - catalog_db
+    environment:
+      - CATALOG_DB_USER=catalog_user
+      - CATALOG_DB_PASSWORD=catalog_pass
+      - CATALOG_DB_NAME=catalog_db
+      - CATALOG_DB_HOST=catalog_db
+      - CATALOG_DB_PORT=5432
+    volumes:
+      - ./catalog_service/app:/app
+    networks:
+      - mynetwork
+
+  cart_service:
+    build: ./cart_service
+    ports:
+      - "8004:8004"
+    depends_on:
+      - cart_db
+    environment:
+      - CART_DB_USER=cart_user
+      - CART_DB_PASSWORD=cart_pass
+      - CART_DB_NAME=cart_db
+      - CART_DB_HOST=cart_db
+      - CART_DB_PORT=5432
+    volumes:
+      - ./cart_service/app:/app
+    networks:
+      - mynetwork
+
+  payment_service:
+    build: ./payment_service
+    ports:
+      - "8005:8005"
+    depends_on:
+      - payment_db
+    environment:
+      - PAYMENT_DB_USER=payment_user
+      - PAYMENT_DB_PASSWORD=payment_pass
+      - PAYMENT_DB_NAME=payment_db
+      - PAYMENT_DB_HOST=payment_db
+      - PAYMENT_DB_PORT=5432
+    volumes:
+      - ./payment_service/app:/app
+    networks:
+      - mynetwork
+    
+  auth_db:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: auth_user
+      POSTGRES_PASSWORD: auth_pass
+      POSTGRES_DB: auth_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - auth_db_data:/var/lib/postgresql/data
+    networks:
+      - mynetwork
+
+  catalog_db:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: catalog_user
+      POSTGRES_PASSWORD: catalog_pass
+      POSTGRES_DB: catalog_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - catalog_db_data:/var/lib/postgresql/data
+    networks:
+      - mynetwork
+
+  cart_db:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: cart_user
+      POSTGRES_PASSWORD: cart_pass
+      POSTGRES_DB: cart_db
+    ports:
+      - "5434:5432"
+    volumes:
+      - cart_db_data:/var/lib/postgresql/data
+    networks:
+      - mynetwork
+
+  payment_db:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: payment_user
+      POSTGRES_PASSWORD: payment_pass
+      POSTGRES_DB: payment_db
+    ports:
+      - "5435:5432"
+    volumes:
+      - payment_db_data:/var/lib/postgresql/data
+    networks:
+      - mynetwork
+
+networks:
+  mynetwork:
+    driver: bridge
+
+volumes:
+  auth_db_data:
+  catalog_db_data: 
+  cart_db_data:
+  payment_db_data:

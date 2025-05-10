@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lakomka</title>
+    <link rel="stylesheet" href="/static/profile.css">
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const email = "{{ email }}";  // Получаем email из шаблона
+            fetchProfileData(email);
+        });
+
+        async function fetchProfileData(email) {
+            try {
+                const response = await fetch(`http://localhost:8001/profile?email=${email}`);
+                if (!response.ok) {
+                    throw new Error('Не удалось загрузить данные профиля');
+                }
+                const profileData = await response.json();
+                renderProfile(profileData);
+            } catch (error) {
+                console.error('Ошибка при загрузке данных профиля:', error);
+                document.getElementById('profileContainer').innerHTML = `<p style="color: red;">Ошибка загрузки данных профиля. Попробуйте снова позже.</p>`;
+            }
+        }
+
+        function renderProfile(profileData) {
+            const profileContainer = document.getElementById('profileContainer');
+            profileContainer.innerHTML = `
+                <header>
+                    <div><h1>Lakomka</h1></div>
+                    <div>
+                        <a href="/">Главная</a>
+                        <a href="/logout">Выйти</a>
+                    </div>
+                </header>
+                <div class="profile-info">
+                    <h1>Профиль для: ${profileData.email}</h1>
+                    <p>Статус: ${profileData.is_active ? 'Активен' : 'Неактивен'}</p>
+                    <p>Номер карты лояльности: ${profileData.loyalty_card_number || 'Не доступно'}</p>
+                </div>
+                <div class="actions">
+                    <h2><a href="/wishlist" class="wishlist-button">Список желаемого</a></h2>
+                    <h2><a href="/orders" class="orders-button">Заказы</a></h2>
+                </div>
+            `;
+        }
+    </script>
+</head>
+<body>
+    <div id="profileContainer"></div>
+</body>
+</html>
