@@ -8,9 +8,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from db.functions import *
 from db.init_db import init_db
 from db.schemas import UserBase, OrderItemBase, OrderBase
-import jwt
+from jwt import decode, DecodeError, ExpiredSignatureError
 from fastapi.security import OAuth2PasswordBearer
-from jwt import DecodeError, ExpiredSignatureError, decode
+from logging_decorator import log_to_kafka
+
 
 SECRET_KEY = "your_secret_key"
 ALGORITHM = "HS256"
@@ -18,7 +19,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 def verify_token(token: str):
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id: int = payload.get("id")
         if user_id is None:
             raise HTTPException(status_code=401, detail="Invalid token")
@@ -43,16 +44,19 @@ async def app_startup():
     await init_db()
 
 @app.get("/get_user_id")
+@log_to_kafka
 async def get_user_id(email: str, db: AsyncSession = Depends(get_db)):
     user = await get_user_by_email(db, email)
     return {"user_id": user.id}
 
 @app.get("/role")
+@log_to_kafka
 async def get_role(email: str, db: AsyncSession = Depends(get_db)):
     user = await get_user_by_email(db, email)
     return {"role": user.role}
 
 @app.get("/profile")
+@log_to_kafka
 async def get_profile(email: str, db: AsyncSession = Depends(get_db)):
     """Получить профиль текущего пользователя по email."""
     print(f"DEBUG: Fetching profile for user {email}")
@@ -67,6 +71,7 @@ async def get_profile(email: str, db: AsyncSession = Depends(get_db)):
     return user_details
 
 @app.post("/create_order")
+@log_to_kafka
 async def create_user_order(request: Request, token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)):
     print("DEBUG AUTH SERVICE create_user_order" )
     try:
@@ -91,11 +96,13 @@ async def create_user_order(request: Request, token: str = Depends(oauth2_scheme
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/")
+@log_to_kafka
 async def health_check():
     """Эндпоинт проверки работоспособности."""
     return {"status": "auth_service running"}
 
 @app.post("/register")
+@log_to_kafka
 async def register(request: Request, db: AsyncSession = Depends(get_db)):
     """Handle user registration."""
     try:
@@ -120,6 +127,7 @@ async def register(request: Request, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/login")
+@log_to_kafka
 async def login(request: Request, db: AsyncSession = Depends(get_db)):
     """Handle user login."""
     try:
