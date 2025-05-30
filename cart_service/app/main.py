@@ -14,7 +14,7 @@ from fastapi.security import OAuth2PasswordBearer
 from db.models import Cart, CartItem
 import jwt
 import requests
-
+from logging_decorator import log_to_kafka
 
 
 SECRET_KEY = "your_secret_key"

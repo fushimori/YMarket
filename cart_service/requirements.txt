@@ -7,3 +7,5 @@ alembic
 pyjwt==2.10.1
 python-dotenv
 requests
+kafka-python==2.0.2
+aiokafka==0.8.1

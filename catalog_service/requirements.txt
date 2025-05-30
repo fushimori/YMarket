@@ -5,3 +5,5 @@ sqlalchemy[asyncio]
 asyncpg
 alembic
 python-dotenv
+kafka-python==2.0.2
+aiokafka==0.8.1

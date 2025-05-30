@@ -55,7 +55,7 @@ def log_to_kafka(func):
             
             # Send log to Kafka
             producer = await get_kafka_producer()
-            print("LOG_TO_KAFKA: отправляю лог", log_data)
+            print("LOG_TO_KAFKA: sending log", log_data)
             await producer.send_and_wait("logs", log_data)
             await producer.stop()
             
@@ -71,7 +71,7 @@ def log_to_kafka(func):
             
             # Send error log to Kafka
             producer = await get_kafka_producer()
-            print("LOG_TO_KAFKA: отправляю ошибку", log_data)
+            print("LOG_TO_KAFKA: sending error", log_data)
             await producer.send_and_wait("errors", log_data)
             await producer.stop()
             
