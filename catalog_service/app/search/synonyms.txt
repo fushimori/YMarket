@@ -1,0 +1,42 @@
+эппл => apple
+эпл => apple
+appl => apple
+
+асус => asus
+
+ксиоми => xiaomi
+сяоми => xiaomi
+сяом => xiaomi
+
+логитеч => logitech
+логитек => logitech
+
+разер => razer
+рэйзер => razer
+
+ленова => lenovo
+леново => lenovo
+
+эйсер => acer
+асер => acer
+
+мси => msi
+
+аос => aoc
+
+самсунг => samsung
+
+дэлл => dell
+делл => dell
+дэл => dell
+дел => dell
+
+ашпи => hp
+эшпи => hp
+
+элджи => lg
+лг => lg
+
+бенку => benq
+бенк => benq
+бэнку => benq
