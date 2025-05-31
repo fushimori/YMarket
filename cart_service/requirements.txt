@@ -9,3 +9,4 @@ python-dotenv
 requests
 kafka-python==2.0.2
 aiokafka==0.8.1
+prometheus-client==0.19.0

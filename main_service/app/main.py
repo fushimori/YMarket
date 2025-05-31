@@ -10,6 +10,7 @@ import jwt
 import httpx
 import asyncio
 from logging_decorator import log_to_kafka
+from metrics import metrics_endpoint, api_metrics
 
 app = FastAPI()
 
@@ -41,8 +42,16 @@ def decode_jwt(token: str) -> str:
     except jwt.InvalidTokenError:
         raise HTTPException(status_code=401, detail="Invalid token")
 
+@app.get("/metrics")
+async def metrics():
+    """
+    Эндпоинт для Prometheus метрик
+    """
+    return await metrics_endpoint()
+
 @app.get("/", response_class=HTMLResponse)
 @log_to_kafka
+@api_metrics()
 async def read_home(request: Request):
     try:
         jwt_token = request.cookies.get("access_token")
@@ -59,6 +68,7 @@ async def read_home(request: Request):
 
 @app.get("/profile", response_class=HTMLResponse)
 @log_to_kafka
+@api_metrics()
 async def get_profile(request: Request):
     jwt_token = request.cookies.get("access_token")
     
@@ -82,6 +92,7 @@ async def get_profile(request: Request):
 
 @app.get("/cart", response_class=HTMLResponse)
 @log_to_kafka
+@api_metrics()
 async def get_cart(request: Request):
     jwt_token = request.cookies.get("access_token")
     
@@ -105,6 +116,7 @@ async def get_cart(request: Request):
 
 @app.get("/wishlist", response_class=HTMLResponse)
 @log_to_kafka
+@api_metrics()
 async def get_wishlist(request: Request):
     jwt_token = request.cookies.get("access_token")
     
@@ -128,6 +140,7 @@ async def get_wishlist(request: Request):
 
 @app.get("/orders", response_class=HTMLResponse)
 @log_to_kafka
+@api_metrics()
 async def get_orders(request: Request):
     jwt_token = request.cookies.get("access_token")
     
@@ -151,22 +164,26 @@ async def get_orders(request: Request):
 
 @app.get("/login", response_class=HTMLResponse)
 @log_to_kafka
+@api_metrics()
 async def login(request: Request):
     return templates.TemplateResponse("login.html", {"request": request})
 
 @app.get("/product", response_class=HTMLResponse)
 @log_to_kafka
+@api_metrics()
 async def product(request: Request):
     jwt_token = request.cookies.get("access_token")
     return templates.TemplateResponse("product.html", {"request": request, "token": jwt_token})
 
 @app.get("/signup", response_class=HTMLResponse)
 @log_to_kafka
+@api_metrics()
 async def signup(request: Request):
     return templates.TemplateResponse("signup.html", {"request": request})
 
 @app.post("/register")
 @log_to_kafka
+@api_metrics()
 async def register(request: Request, email: str = Form(...), password: str = Form(...), client: httpx.AsyncClient = Depends(get_http_client)):
     """Send a registration request to the auth service."""
     try:
@@ -185,6 +202,7 @@ async def register(request: Request, email: str = Form(...), password: str = For
 
 @app.post("/login")
 @log_to_kafka
+@api_metrics()
 async def login_action(request: Request, email: str = Form(...), password: str = Form(...), client: httpx.AsyncClient = Depends(get_http_client)):
     """Send a login request to the auth service."""
     print("DEBUG: main_service in post login")
@@ -213,6 +231,7 @@ async def login_action(request: Request, email: str = Form(...), password: str =
 
 @app.get("/logout")
 @log_to_kafka
+@api_metrics()
 async def logout(response: Response):
     """Logout the user by clearing the access token cookie."""
     response = RedirectResponse(url="/", status_code=303)

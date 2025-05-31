@@ -201,6 +201,36 @@ services:
       - payment_db_data:/var/lib/postgresql/data
     networks:
       - mynetwork
+      
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./analysis_service/app/prometheus:/etc/prometheus
+      - prometheus_data:/prometheus
+    networks:
+      - mynetwork
+    depends_on:
+      - analysis_service
+      - auth_service
+      - catalog_service
+      - cart_service
+      - main_service
+    command:
+      - '--config.file=/etc/prometheus/config.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      - mynetwork
 
 networks:
   mynetwork:
@@ -212,3 +242,6 @@ volumes:
   cart_db_data:
   payment_db_data:
   elasticsearch_data:
+  prometheus_data:
+  grafana_data:
+  kafka_data:

@@ -11,6 +11,7 @@ from db.schemas import UserBase, OrderItemBase, OrderBase
 from jwt import decode, DecodeError, ExpiredSignatureError
 from fastapi.security import OAuth2PasswordBearer
 from logging_decorator import log_to_kafka
+from metrics import api_metrics, metrics_endpoint
 
 
 SECRET_KEY = "your_secret_key"
@@ -43,20 +44,28 @@ app.add_middleware(
 async def app_startup():
     await init_db()
 
+@app.get("/metrics")
+async def get_metrics():
+    """Эндпоинт для Prometheus"""
+    return await metrics_endpoint()
+
 @app.get("/get_user_id")
 @log_to_kafka
+@api_metrics()
 async def get_user_id(email: str, db: AsyncSession = Depends(get_db)):
     user = await get_user_by_email(db, email)
     return {"user_id": user.id}
 
 @app.get("/role")
 @log_to_kafka
+@api_metrics()
 async def get_role(email: str, db: AsyncSession = Depends(get_db)):
     user = await get_user_by_email(db, email)
     return {"role": user.role}
 
 @app.get("/profile")
 @log_to_kafka
+@api_metrics()
 async def get_profile(email: str, db: AsyncSession = Depends(get_db)):
     """Получить профиль текущего пользователя по email."""
     print(f"DEBUG: Fetching profile for user {email}")
@@ -72,6 +81,7 @@ async def get_profile(email: str, db: AsyncSession = Depends(get_db)):
 
 @app.post("/create_order")
 @log_to_kafka
+@api_metrics()
 async def create_user_order(request: Request, token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)):
     print("DEBUG AUTH SERVICE create_user_order" )
     try:
@@ -97,12 +107,14 @@ async def create_user_order(request: Request, token: str = Depends(oauth2_scheme
 
 @app.get("/")
 @log_to_kafka
+@api_metrics()
 async def health_check():
     """Эндпоинт проверки работоспособности."""
     return {"status": "auth_service running"}
 
 @app.post("/register")
 @log_to_kafka
+@api_metrics()
 async def register(request: Request, db: AsyncSession = Depends(get_db)):
     """Handle user registration."""
     try:
@@ -128,6 +140,7 @@ async def register(request: Request, db: AsyncSession = Depends(get_db)):
 
 @app.post("/login")
 @log_to_kafka
+@api_metrics()
 async def login(request: Request, db: AsyncSession = Depends(get_db)):
     """Handle user login."""
     try:

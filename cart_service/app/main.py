@@ -15,6 +15,7 @@ from db.models import Cart, CartItem
 import jwt
 import requests
 from logging_decorator import log_to_kafka
+from metrics import metrics_endpoint, api_metrics
 
 
 SECRET_KEY = "your_secret_key"
@@ -47,7 +48,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/metrics")
+async def metrics():
+    """
+    Эндпоинт для Prometheus метрик
+    """
+    return await metrics_endpoint()
+
 @app.get("/cart/add")
+@api_metrics()
 async def add_to_cart(product_id: int = None, token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)):
     user_id = verify_token(token)
     cart = await add_product_to_cart(db, user_id, product_id)
@@ -61,6 +70,7 @@ async def add_to_cart(product_id: int = None, token: str = Depends(oauth2_scheme
 
 # убрать обращение к бд здесь
 @app.get("/check_cart")
+@api_metrics()
 async def check_cart(product_id: int = None, token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)):
     user_id = verify_token(token)  # Проверка токена
     print("DEBUG CART SERVICE check_cart, user_id: ", user_id)
@@ -86,6 +96,7 @@ async def check_cart(product_id: int = None, token: str = Depends(oauth2_scheme)
 
 
 @app.get("/cart/delete")
+@api_metrics()
 async def delete_from_cart(product_id: int = None, token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)):
     user_id = verify_token(token)
     cart = await remove_product_from_cart(db, user_id, product_id)
@@ -101,6 +112,7 @@ async def delete_from_cart(product_id: int = None, token: str = Depends(oauth2_s
 
 
 @app.get("/cart/createorder")
+@api_metrics()
 async def create_order(token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)):
     if not token:
         raise HTTPException(status_code=401, detail="Invalid token")
@@ -157,6 +169,7 @@ async def create_order(token: str = Depends(oauth2_scheme), db: AsyncSession = D
 
 
 @app.get("/cart/{user_id}")
+@api_metrics()
 async def get_cart(user_id: int, db: AsyncSession = Depends(get_db)):
     items = await get_cart_items(db, user_id)
     print("DEBUG: cart items: ", items)
@@ -164,12 +177,14 @@ async def get_cart(user_id: int, db: AsyncSession = Depends(get_db)):
 
 # Добавление товара в корзину
 @app.post("/cart/{user_id}", response_model=CartResponse)
+@api_metrics()
 async def add_to_cart(user_id: int, product: CartItemBase, db: AsyncSession = Depends(get_db)):
     cart = await add_product_to_cart(db, user_id, product.product_id, product.quantity)
     return cart
 
 # Обновление количества товара в корзине
 @app.put("/cart/{user_id}/{product_id}", response_model=CartResponse)
+@api_metrics()
 async def update_cart_item_quantity(user_id: int, product_id: int, quantity: int, db: AsyncSession = Depends(get_db)):
     cart = await update_product_quantity_in_cart(db, user_id, product_id, quantity)
     return cart
@@ -181,6 +196,7 @@ async def update_cart_item_quantity(user_id: int, product_id: int, quantity: int
 #     return cart
 
 @app.get("/")
+@api_metrics()
 async def health_check():
     """Health check endpoint."""
     return {"status": "cart_service running"}

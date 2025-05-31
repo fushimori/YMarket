@@ -5,7 +5,9 @@ from fastapi import HTTPException
 from db.models import Cart, CartItem
 from sqlalchemy.orm import joinedload, selectinload
 from sqlalchemy import text, delete
+from metrics import db_metrics
 
+@db_metrics(operation="get_cart_items")
 async def get_cart_items(db: AsyncSession, user_id: int):
     """
     Получить товары из корзины пользователя.
@@ -31,11 +33,13 @@ async def get_cart_items(db: AsyncSession, user_id: int):
     return items
 
 # Получение корзины по ID пользователя
+@db_metrics(operation="get_cart_by_user_id")
 async def get_cart_by_user_id(db: AsyncSession, user_id: int):
     result = await db.execute(select(Cart).filter(Cart.user_id == user_id))
     return result.scalar_one_or_none()
 
 # Добавление товара в корзину
+@db_metrics(operation="add_product_to_cart")
 async def add_product_to_cart(db: AsyncSession, user_id: int, product_id: int, quantity: int = 1):
     # Проверим, есть ли корзина для данного пользователя
     cart = await get_cart_by_user_id(db, user_id)
@@ -63,6 +67,7 @@ async def add_product_to_cart(db: AsyncSession, user_id: int, product_id: int, q
     return cart
 
 
+@db_metrics(operation="get_cart_with_items")
 async def get_cart_with_items(db: AsyncSession, user_id: int):
     # Выполняем запрос для получения корзины и её элементов
     result = await db.execute(
@@ -91,6 +96,7 @@ async def get_cart_with_items(db: AsyncSession, user_id: int):
     return cart_dict
 
 
+@db_metrics(operation="clear_user_cart")
 async def clear_user_cart(db: AsyncSession, user_id: int):
     """Функция для очистки корзины пользователя"""
     # Получаем корзину по user_id
@@ -103,6 +109,7 @@ async def clear_user_cart(db: AsyncSession, user_id: int):
         await db.commit()  # Сохраняем изменения в базе данных
 
 # Удаление товара из корзины
+@db_metrics(operation="remove_product_from_cart")
 async def remove_product_from_cart(db: AsyncSession, user_id: int, product_id: int):
     # Получаем корзину пользователя
     cart = await get_cart_by_user_id(db, user_id)
@@ -122,6 +129,7 @@ async def remove_product_from_cart(db: AsyncSession, user_id: int, product_id: i
     return cart
 
 # Обновление количества товара в корзине
+@db_metrics(operation="update_product_quantity_in_cart")
 async def update_product_quantity_in_cart(db: AsyncSession, user_id: int, product_id: int, quantity: int):
     if quantity <= 0:
         raise HTTPException(status_code=400, detail="Quantity must be greater than zero.")
@@ -144,6 +152,7 @@ async def update_product_quantity_in_cart(db: AsyncSession, user_id: int, produc
     return cart
 
 # Получение всех товаров в корзине
+@db_metrics(operation="get_all_cart_items")
 async def get_all_cart_items(db: AsyncSession, user_id: int):
     cart = await get_cart_by_user_id(db, user_id)
     if not cart:
