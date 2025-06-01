@@ -64,8 +64,8 @@ async def create_index():
                                 "lowercase",
                                 "russian_stop",
                                 "russian_stemmer",
-                                "synonym_filter",
-                                #"autocomplete_filter"
+                                #"synonym_filter",
+                                "autocomplete_filter"
                             ]
                         }
                     }
