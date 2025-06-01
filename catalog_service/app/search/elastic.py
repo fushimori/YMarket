@@ -15,7 +15,9 @@ es = AsyncElasticsearch(
     headers={
         "Accept": "application/vnd.elasticsearch+json; compatible-with=8",
         "Content-Type": "application/vnd.elasticsearch+json; compatible-with=8"
-    }
+    },
+    verify_certs=False,
+    ssl_show_warn=False
 )
 
 

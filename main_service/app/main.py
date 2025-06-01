@@ -256,10 +256,16 @@ async def logout(response: Response):
     return response
 
 @app.get("/signup/seller", response_class=HTMLResponse)
+@log_to_kafka
+@api_metrics()
+@trace_function(name="signup_seller", include_request=True)
 async def signup_seller(request: Request):
     return templates.TemplateResponse("signup_seller.html", {"request": request})
 
 @app.post("/register/seller")
+@log_to_kafka
+@api_metrics()
+@trace_function(name="register_seller", include_request=True)
 async def register_seller(request: Request, email: str = Form(...), password: str = Form(...), shop_name: str = Form(...), inn: str = Form(None), description: str = Form(None), client: httpx.AsyncClient = Depends(get_http_client)):
     """Отправить запрос на регистрацию продавца в auth_service."""
     try:
@@ -282,6 +288,9 @@ async def register_seller(request: Request, email: str = Form(...), password: st
         return templates.TemplateResponse("signup_seller.html", {"request": request, "error": f"Ошибка сервера: {str(e)}"})
 
 @app.get("/seller/add_product", response_class=HTMLResponse)
+@log_to_kafka
+@api_metrics()
+@trace_function(name="seller_add_product_page", include_request=True)
 async def seller_add_product_page(request: Request, client: httpx.AsyncClient = Depends(get_http_client)):
     jwt_token = request.cookies.get("access_token")
     if not jwt_token:
@@ -299,6 +308,9 @@ async def seller_add_product_page(request: Request, client: httpx.AsyncClient = 
     return templates.TemplateResponse("seller_add_product.html", {"request": request})
 
 @app.post("/seller/add_product")
+@log_to_kafka
+@api_metrics()
+@trace_function(name="seller_add_product", include_request=True)
 async def seller_add_product(request: Request, client: httpx.AsyncClient = Depends(get_http_client)):
     form = await request.form()
     # Определяем, что отправлено: один товар или файл
@@ -345,6 +357,9 @@ async def seller_add_product(request: Request, client: httpx.AsyncClient = Depen
             return templates.TemplateResponse("seller_add_product.html", {"request": request, "error": result.get("detail", "Ошибка добавления товара")})
 
 @app.get("/seller/edit_product", response_class=HTMLResponse)
+@log_to_kafka
+@api_metrics()
+@trace_function(name="seller_edit_product_page", include_request=True)
 async def seller_edit_product_page(request: Request, id: int, client: httpx.AsyncClient = Depends(get_http_client)):
     jwt_token = request.cookies.get("access_token")
     if not jwt_token:
@@ -375,6 +390,9 @@ async def seller_edit_product_page(request: Request, id: int, client: httpx.Asyn
     return templates.TemplateResponse("seller_edit_product.html", {"request": request, "product": product})
 
 @app.post("/seller/update_product")
+@log_to_kafka
+@api_metrics()
+@trace_function(name="seller_update_product", include_request=True)
 async def seller_update_product(request: Request, id: int = Form(...), name: str = Form(...), price: float = Form(...), description: str = Form(None), client: httpx.AsyncClient = Depends(get_http_client)):
     jwt_token = request.cookies.get("access_token")
     if not jwt_token:
@@ -414,6 +432,9 @@ async def seller_update_product(request: Request, id: int = Form(...), name: str
         raise HTTPException(status_code=response.status_code, detail=result.get("detail", "Ошибка при обновлении товара"))
 
 @app.get("/seller/metrics", response_class=HTMLResponse)
+@log_to_kafka
+@api_metrics()
+@trace_function(name="seller_metrics_page", include_request=True)
 async def seller_metrics_page(request: Request, client: httpx.AsyncClient = Depends(get_http_client)):
     jwt_token = request.cookies.get("access_token")
     if not jwt_token:
@@ -433,6 +454,9 @@ async def seller_metrics_page(request: Request, client: httpx.AsyncClient = Depe
     return templates.TemplateResponse("seller_metrics.html", {"request": request})
 
 @app.post("/seller/delete_product")
+@log_to_kafka
+@api_metrics()
+@trace_function(name="seller_delete_product", include_request=True)
 async def seller_delete_product(request: Request, id: int = Form(...), client: httpx.AsyncClient = Depends(get_http_client)):
     jwt_token = request.cookies.get("access_token")
     if not jwt_token:

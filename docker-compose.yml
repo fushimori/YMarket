@@ -251,7 +251,7 @@ services:
       - xpack.security.transport.ssl.enabled=false
       - ES_JAVA_OPTS=-Xms512m -Xmx512m
     ports:
-      - "9201:9201"
+      - "9201:9200"
     volumes:
       - ./catalog_service/app/search/synonyms.txt:/usr/share/elasticsearch/config/synonyms.txt
     networks:
@@ -265,7 +265,7 @@ services:
     depends_on:
       - elasticsearch_engine
     environment:
-      - ELASTICSEARCH_HOSTS=http://elasticsearch_engine:9201
+      - ELASTICSEARCH_HOSTS=http://elasticsearch_engine:9200
     networks:
       - mynetwork
 

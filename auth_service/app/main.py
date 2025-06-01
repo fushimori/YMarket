@@ -181,7 +181,11 @@ async def login(request: Request, db: AsyncSession = Depends(get_db)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.post("/register/seller")
+@log_to_kafka
+@api_metrics()
+@trace_function(name="register_seller", include_request=True)
 async def register_seller_endpoint(request: Request, db: AsyncSession = Depends(get_db)):
     """Регистрация продавца (seller)."""
     try:
@@ -205,6 +209,9 @@ async def register_seller_endpoint(request: Request, db: AsyncSession = Depends(
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/seller/{user_id}")
+@log_to_kafka
+@api_metrics()
+@trace_function(name="get_seller", include_request=True)
 async def get_seller_info(user_id: int, db: AsyncSession = Depends(get_db)):
     """Получить информацию о продавце по user_id."""
     seller = await get_seller_by_user_id(db, user_id)

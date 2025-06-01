@@ -12,6 +12,7 @@ from logging_decorator import log_to_kafka
 from metrics import metrics_endpoint, api_metrics
 from config.tracing import setup_tracing
 from metrics.tracing_decorator import trace_function
+from search.elastic import create_index, index_product, delete_product_from_index, search_products
 
 from fastapi.security import OAuth2PasswordBearer
 import jwt

@@ -39,11 +39,11 @@ async def get_user_with_details(db: AsyncSession, email: str):
         "email": user.email,
         "role": user.role,
         "is_active": user.is_active,
-        "wishlist": [
-            {"product_id": item.product_id} for item in wishlist
-        ],
-        "orders": orders_with_items
-        "role": user.role.value if hasattr(user.role, 'value') else str(user.role),
+        # "wishlist": [
+        #     {"product_id": item.product_id} for item in wishlist
+        # ],
+        # "orders": orders_with_items,
+        # "role": user.role.value if hasattr(user.role, 'value') else str(user.role),
     }
 
     if user_data["role"] == "seller":
@@ -198,6 +198,7 @@ async def get_order_with_items(db: AsyncSession, order_id: int):
     return order
 
 # Функция для создания продавца
+@db_metrics(operation="create_seller")
 async def create_seller(db: AsyncSession, user_id: int, seller_data: dict):
     db_seller = Seller(
         user_id=user_id,
@@ -211,6 +212,7 @@ async def create_seller(db: AsyncSession, user_id: int, seller_data: dict):
     return db_seller
 
 # Функция для регистрации продавца
+@db_metrics(operation="register_seller")
 async def register_seller(db: AsyncSession, seller_data: SellerRegister):
     # print("DEBUG: auth function register_seller, seller_data:", seller_data)
     existing_user = await get_user_by_email(db, seller_data.email)
@@ -236,6 +238,7 @@ async def register_seller(db: AsyncSession, seller_data: SellerRegister):
     await db.refresh(db_seller)
     return db_user, db_seller
 
+@db_metrics(operation="get_seller_by_user_id")
 async def get_seller_by_user_id(db: AsyncSession, user_id: int):
     seller_result = await db.execute(select(Seller).filter(Seller.user_id == user_id))
     seller = seller_result.scalar_one_or_none()
