@@ -34,12 +34,28 @@ async def get_all_products(db: AsyncSession, category: int = None, search: str =
 
 # Получение одного продукта
 async def get_product_by_id(db: AsyncSession, product_id: int):
-    result = await db.execute(select(Product).filter(Product.id == product_id))
+    result = await db.execute(
+        select(Product)
+        .options(selectinload(Product.category), selectinload(Product.images))
+        .filter(Product.id == product_id)
+    )
     product = result.scalar_one_or_none()
-    products_list = ProductBase.from_orm(product)
 
-    products_dict = products_list.dict()
-    print("DEBUG CATALOG FUNCTION, get_product_by_id, products_dict", products_dict)
+    if product is None:
+        return None
+
+    products_dict = {
+        "id": product.id,
+        "name": product.name,
+        "description": product.description,
+        "price": product.price,
+        "stock": product.stock,
+        "category_id": product.category_id,
+        "seller_id": product.seller_id,
+        "category": {"id": product.category.id, "name": product.category.name} if product.category else None,
+        "images": None
+    }
+
     return products_dict
 
 async def get_all_categories(db: AsyncSession):
