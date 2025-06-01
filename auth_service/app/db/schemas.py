@@ -71,3 +71,25 @@ class OrderItem(OrderItemBase):
 
     class Config:
         orm_mode = True
+
+class SellerBase(BaseModel):
+    shop_name: str
+    inn: Optional[str] = None
+    description: Optional[str] = None
+
+    class Config:
+        orm_mode = True
+
+class Seller(SellerBase):
+    id: int
+    user_id: int
+
+    class Config:
+        orm_mode = True
+
+class SellerRegister(BaseModel):
+    email: str
+    password: str
+    shop_name: str
+    inn: Optional[str] = None
+    description: Optional[str] = None

@@ -15,6 +15,7 @@
         <div id="product-seller" class="product-seller"></div>
         <button id="add-to-cart-btn" disabled>Проверка корзины...</button>
         <div id="cart-message"></div>
+        <div id="seller-actions"></div>
         <a href="http://localhost:8000/">Назад к товарам</a>
     </div>
 
@@ -30,9 +31,11 @@
                 if (!productResponse.ok) throw new Error('Ошибка при загрузке данных о товаре');
                 const product = await productResponse.json();
 
-                // Получаем данные продавца
-                const sellerResponse = await fetch(`http://localhost:8003/api/get_seller?id=${product.seller_id}`);
-                if (!sellerResponse.ok) throw new Error('Ошибка при загрузке данных о продавце');
+                // Загрузка данных о продавце из auth_service
+                const sellerResponse = await fetch(`http://localhost:8001/api/seller/${product.seller_id}`);
+                if (!sellerResponse.ok) {
+                    throw new Error('Ошибка при загрузке данных о продавце');
+                }
                 const seller = await sellerResponse.json();
 
                 // Обновляем DOM
@@ -40,27 +43,119 @@
                 document.getElementById('product-title').textContent = product.name;
                 document.getElementById('product-price').textContent = `Всего за ${product.price} рублей`;
                 document.getElementById('product-description').textContent = product.description;
-                document.getElementById('product-seller').textContent = `Продавец: ${seller.name}`;
+                document.getElementById('product-seller').textContent = `Продавец: ${seller.shop_name || 'N/A'}`;
 
-                // Проверяем корзину
-                await checkCart(productId);
+                // Проверяем роль пользователя и корзину
+                await checkUserRoleAndCart(productId);
+                // Проверяем, является ли текущий пользователь продавцом этого товара
+                await checkIfSellerOwnsProduct(productId, product.seller_id);
             } catch (error) {
                 console.error('Ошибка:', error);
                 document.getElementById('product-title').textContent = 'Ошибка при загрузке данных о товаре';
             }
         }
 
-        async function checkCart(productId) {
+        async function checkIfSellerOwnsProduct(productId, productSellerId) {
+            const token = "{{ token }}";
+            if (!token) {
+                return; // Пользователь не авторизован
+            }
+
             try {
-                const token = "{{ token }}";
+                // Декодируем JWT, чтобы получить email
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+                const payload = JSON.parse(jsonPayload);
+                const email = payload.sub;
+
+                if (!email) {
+                    console.error("ERROR: Email not found in JWT payload.");
+                    return;
+                }
+
+                // Получаем данные пользователя (роль и ID) из auth_service
+                const userDetailsResponse = await fetch(`http://localhost:8001/profile?email=${email}`);
+                if (!userDetailsResponse.ok) {
+                    console.error('Ошибка при получении данных пользователя:', userDetailsResponse.statusText);
+                    return;
+                }
+                const userDetails = await userDetailsResponse.json();
+                const currentUserRole = userDetails.role;
+                const currentUserId = userDetails.id; 
+
+                if (currentUserRole === 'seller' && currentUserId === productSellerId) {
+                    const editButtonHtml = `<a href="/seller/edit_product?id=${productId}" class="edit-product-button">Изменить товар</a>`;
+                    const sellerActionsDiv = document.getElementById('seller-actions');
+                    if (sellerActionsDiv) {
+                        sellerActionsDiv.insertAdjacentHTML('beforeend', editButtonHtml);
+                    }
+                }
+            } catch (error) {
+                console.error('Ошибка при проверке прав продавца:', error);
+            }
+        }
+
+        async function checkUserRoleAndCart(productId) {
+            try {
+                const addToCartBtn = document.getElementById('add-to-cart-btn');
+                const cartMessage = document.getElementById('cart-message');
+                const jwt_token = "{{ token }}";
+
+                if (!jwt_token) {
+                    addToCartBtn.disabled = true;
+                    addToCartBtn.textContent = 'Войдите, чтобы добавить в корзину';
+                    cartMessage.textContent = '';
+                    return;
+                }
+
+                // Получаем роль пользователя
+                let email = null;
+                try {
+                    const base64Url = jwt_token.split('.')[1];
+                    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                    }).join(''));
+                    const payload = JSON.parse(jsonPayload);
+                    email = payload.sub;
+                } catch (e) {
+                    console.error("Ошибка при декодировании JWT:", e);
+                    addToCartBtn.disabled = true;
+                    addToCartBtn.textContent = 'Ошибка авторизации';
+                    return;
+                }
+
+                if (!email) {
+                    addToCartBtn.disabled = true;
+                    addToCartBtn.textContent = 'Ошибка авторизации';
+                    return;
+                }
+
+                const roleResponse = await fetch(`http://localhost:8001/role?email=${email}`);
+                if (!roleResponse.ok) {
+                    console.error('Ошибка при получении роли пользователя:', roleResponse.status, roleResponse.statusText);
+                    addToCartBtn.disabled = true;
+                    addToCartBtn.textContent = 'Ошибка роли';
+                    return;
+                }
+                const roleData = await roleResponse.json();
+                const userRole = roleData.role;
+
+                if (userRole === 'seller') {
+                    addToCartBtn.style.display = 'none';
+                    cartMessage.textContent = 'Продавцы не могут добавлять товары в корзину.';
+                    return;
+                }
+
+                // Если пользователь не продавец, проверяем корзину
                 const response = await fetch(`http://localhost:8004/check_cart?product_id=${productId}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
+                    headers: { 'Authorization': `Bearer ${jwt_token}` }
                 });
                 if (!response.ok) throw new Error('Ошибка при проверке корзины');
                 const result = await response.json();
-
-                const addToCartBtn = document.getElementById('add-to-cart-btn');
-                const cartMessage = document.getElementById('cart-message');
 
                 if (result.exists) {
                     addToCartBtn.disabled = true;
