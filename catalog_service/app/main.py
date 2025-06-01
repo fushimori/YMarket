@@ -10,8 +10,6 @@ from db.init_db import init_db
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer
 import jwt
-from search.elastic import create_index, index_product, delete_product_from_index, search_products
-import asyncio
 
 SECRET_KEY = "your_secret_key"
 ALGORITHM = "HS256"
@@ -29,24 +27,13 @@ def verify_token(token: str):
 
 async def lifespan(app: FastAPI) -> AsyncGenerator:
     await init_db()
-    await asyncio.sleep(5)  # дать время на запуск Elasticsearch
-    await create_index()
-    
-    # ✅ Индексируем все товары из базы после создания индекса
-    async for db in get_db():
-        products = await get_all_products(db)
-        for product in products:
-            await index_product(product)
-
     yield
-
-
 
 app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:8000"],  # Укажите адрес фронтенда
+    allow_origins=["http://localhost:8000", "http://main_service:8000", "http://localhost:8003"],  # Укажите адрес фронтенда
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -69,7 +56,6 @@ async def read_products(
         return products
 
 
-
 @app.get("/api/categories")
 async def get_categories(db: AsyncSession = Depends(get_db)):
     categories = await get_all_categories(db)
@@ -79,9 +65,11 @@ async def get_categories(db: AsyncSession = Depends(get_db)):
 @app.get("/api/get_product")  # Указываем Pydantic модель для списка продуктов
 async def get_product(id: int = None, db: AsyncSession = Depends(get_db)):
     print("DEBUG CATALOG SERVICE get_product: productid:", id)
-    products = await get_product_by_id(db, id)
-    print("DEBUG CATALOG SERVICE get_product: products: ", products)
-    return products
+    product = await get_product_by_id(db, id)
+    if product is None:
+        raise HTTPException(status_code=404, detail="Product not found")
+    print("DEBUG CATALOG SERVICE get_product: products: ", product)
+    return product
 
 
 @app.get("/api/get_seller")  # Указываем Pydantic модель для списка продуктов
@@ -111,7 +99,9 @@ async def create_new_product(product: ProductCreate, db: AsyncSession = Depends(
         category_id=product.category_id,
         seller_id=product.seller_id
     )
-    await index_product(new_product)  # Индексируем в Elasticsearch
+    # Преобразуем SQLAlchemy-модель в Pydantic-схему, затем в словарь для индексации
+    product_for_indexing = ProductSchema.from_orm(new_product).dict()
+    await index_product(product_for_indexing) # Индексируем в Elasticsearch
     return new_product
 
 
