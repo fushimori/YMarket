@@ -5,9 +5,11 @@ from fastapi import HTTPException
 from db.models import Product, Category
 from db.schemas import ProductBase, Product as ProductSchema, CategorySchemas, ProductBase
 from sqlalchemy.orm import selectinload
+from metrics import db_metrics
 
 
 # Получение всех продуктов с пагинацией
+@db_metrics(operation="get_all_products")
 async def get_all_products(db: AsyncSession, category: int = None, search: str = '', skip: int = 0, limit: int = 1000):
     # print("DEBUG CATALOG FUNCTION, get_all_products, search", search)
     if category:
@@ -33,6 +35,7 @@ async def get_all_products(db: AsyncSession, category: int = None, search: str =
     return products_dict
 
 # Получение одного продукта
+@db_metrics(operation="get_product_by_id")
 async def get_product_by_id(db: AsyncSession, product_id: int):
     result = await db.execute(
         select(Product)
@@ -58,6 +61,7 @@ async def get_product_by_id(db: AsyncSession, product_id: int):
 
     return products_dict
 
+@db_metrics(operation="get_all_categories")
 async def get_all_categories(db: AsyncSession):
     result = await db.execute(select(Category))
     categories = result.scalars().all()
@@ -69,6 +73,7 @@ async def get_all_categories(db: AsyncSession):
 
     return categories_dict
 
+@db_metrics(operation="get_seller_by_id")
 async def get_seller_by_id(db: AsyncSession, seller_id: int):
     pass
     # result = await db.execute(select(Seller).filter(Seller.id == seller_id))
@@ -80,6 +85,7 @@ async def get_seller_by_id(db: AsyncSession, seller_id: int):
     # return seller_id_dict
 
 # Создание нового товара
+@db_metrics(operation="create_product")
 async def create_product(db: AsyncSession, name: str, description: str, price: float, stock: int, category_id: int, seller_id: int):
     if price < 0 or stock < 0:
         raise HTTPException(status_code=400, detail="Price and stock must be non-negative.")
@@ -105,6 +111,7 @@ async def create_product(db: AsyncSession, name: str, description: str, price: f
 
 # Обновление продукта
 # Обновление продукта
+@db_metrics(operation="update_product")
 async def update_product(db: AsyncSession, product_id: int, name: str, description: str, price: float, stock: int):
     # Получаем продукт по ID как SQLAlchemy-модель, с жадной загрузкой отношений
     result = await db.execute(
@@ -140,6 +147,7 @@ async def update_product(db: AsyncSession, product_id: int, name: str, descripti
 
 
 # Удаление товара
+@db_metrics(operation="delete_product")
 async def delete_product(db: AsyncSession, product_id: int):
     # Получаем продукт по ID как SQLAlchemy-модель, с жадной загрузкой отношений
     result = await db.execute(

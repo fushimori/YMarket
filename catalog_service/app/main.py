@@ -8,6 +8,11 @@ from typing import List, AsyncGenerator
 from db.functions import *
 from db.init_db import init_db
 from fastapi.middleware.cors import CORSMiddleware
+from logging_decorator import log_to_kafka
+from metrics import metrics_endpoint, api_metrics
+from config.tracing import setup_tracing
+from metrics.tracing_decorator import trace_function
+
 from fastapi.security import OAuth2PasswordBearer
 import jwt
 
@@ -31,6 +36,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
 
 app = FastAPI(lifespan=lifespan)
 
+# Инициализация трейсинга
+tracer = setup_tracing(app)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:8000", "http://main_service:8000", "http://localhost:8003"],  # Укажите адрес фронтенда
@@ -40,7 +48,19 @@ app.add_middleware(
 )
 
 
-@app.get("/api/products")
+
+@app.get("/metrics")
+@trace_function(name="get_metrics", include_request=True)
+async def metrics():
+    """
+    Эндпоинт для Prometheus метрик
+    """
+    return await metrics_endpoint()
+
+@app.get("/api/products")  # Указываем Pydantic модель для списка продуктов
+@log_to_kafka
+@api_metrics()
+@trace_function(name="read_products", include_request=True)
 async def read_products(
     searchquery: str = Query(default='', alias="search"),
     category: int = None,
@@ -57,12 +77,18 @@ async def read_products(
 
 
 @app.get("/api/categories")
+@log_to_kafka
+@api_metrics()
+@trace_function(name="get_categories", include_request=True)
 async def get_categories(db: AsyncSession = Depends(get_db)):
     categories = await get_all_categories(db)
     # print("DEBUG CATALOG SERVICE: categories: ", categories)
     return categories
 
 @app.get("/api/get_product")  # Указываем Pydantic модель для списка продуктов
+@log_to_kafka
+@api_metrics()
+@trace_function(name="get_product", include_request=True)
 async def get_product(id: int = None, db: AsyncSession = Depends(get_db)):
     print("DEBUG CATALOG SERVICE get_product: productid:", id)
     product = await get_product_by_id(db, id)
@@ -73,6 +99,9 @@ async def get_product(id: int = None, db: AsyncSession = Depends(get_db)):
 
 
 @app.get("/api/get_seller")  # Указываем Pydantic модель для списка продуктов
+@log_to_kafka
+@api_metrics()
+@trace_function(name="get_seller", include_request=True)
 async def get_seller(id: int = None, db: AsyncSession = Depends(get_db)):
     print("DEBUG CATALOG SERVICE get_seller: seller_id:", id)
     seller = await get_seller_by_id(db, id)
@@ -81,6 +110,9 @@ async def get_seller(id: int = None, db: AsyncSession = Depends(get_db)):
 
 
 @app.get("/products/{product_id}", response_model=ProductSchema)  # Указываем Pydantic модель для одного товара
+@log_to_kafka
+@api_metrics()
+@trace_function(name="read_product", include_request=True)
 async def read_product(product_id: int, db: AsyncSession = Depends(get_db)):
     product = await get_product_by_id(db, product_id)
     if not product:
@@ -88,6 +120,9 @@ async def read_product(product_id: int, db: AsyncSession = Depends(get_db)):
     return product
 
 @app.post("/products", response_model=ProductSchema)
+@log_to_kafka
+@api_metrics()
+@trace_function(name="create_new_product", include_request=True)
 async def create_new_product(product: ProductCreate, db: AsyncSession = Depends(get_db)):
     # Извлекаем параметры из объекта ProductCreate
     new_product = await create_product(
@@ -105,7 +140,11 @@ async def create_new_product(product: ProductCreate, db: AsyncSession = Depends(
     return new_product
 
 
+
 @app.put("/edit_product/{product_id}", response_model=ProductSchema)
+@log_to_kafka
+@api_metrics()
+@trace_function(name="update_existing_product", include_request=True)
 async def update_existing_product(
     product_id: int, product: ProductBase, token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)
 ):
@@ -133,12 +172,16 @@ async def update_existing_product(
     return updated_product
 
 
-@app.delete("/products/{product_id}")
+@app.delete("/products/{product_id}")  # Указываем Pydantic модель для ответа
+@log_to_kafka
+@api_metrics()
+@trace_function(name="delete_existing_product", include_request=True)
 async def delete_existing_product(product_id: int, token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)):
     user_id = verify_token(token)
 
     existing_product = await get_product_by_id(db, product_id)
     if not existing_product:
+
         raise HTTPException(status_code=404, detail="Product not found")
 
     if existing_product['seller_id'] != user_id:

@@ -9,8 +9,15 @@ import time
 import jwt
 import httpx
 import asyncio
+from logging_decorator import log_to_kafka
+from metrics import metrics_endpoint, api_metrics
+from config.tracing import setup_tracing
+from metrics.tracing_decorator import trace_function
 
 app = FastAPI()
+
+# Инициализация трейсинга
+tracer = setup_tracing(app)
 
 # Templates and static files
 templates = Jinja2Templates(directory="templates")
@@ -40,7 +47,18 @@ def decode_jwt(token: str) -> str:
     except jwt.InvalidTokenError:
         raise HTTPException(status_code=401, detail="Invalid token")
 
+@app.get("/metrics")
+@trace_function(name="get_metrics", include_request=True)
+async def metrics():
+    """
+    Эндпоинт для Prometheus метрик
+    """
+    return await metrics_endpoint()
+
 @app.get("/", response_class=HTMLResponse)
+@log_to_kafka
+@api_metrics()
+@trace_function(name="read_home", include_request=True)
 async def read_home(request: Request):
     try:
         jwt_token = request.cookies.get("access_token")
@@ -56,6 +74,9 @@ async def read_home(request: Request):
     return templates.TemplateResponse("index.html", {"request": request, "email": email})
 
 @app.get("/profile", response_class=HTMLResponse)
+@log_to_kafka
+@api_metrics()
+@trace_function(name="get_profile", include_request=True)
 async def get_profile(request: Request):
     jwt_token = request.cookies.get("access_token")
     
@@ -78,6 +99,9 @@ async def get_profile(request: Request):
     return templates.TemplateResponse("profile.html", {"request": request, "email": email, "token": jwt_token})
 
 @app.get("/cart", response_class=HTMLResponse)
+@log_to_kafka
+@api_metrics()
+@trace_function(name="get_cart", include_request=True)
 async def get_cart(request: Request):
     jwt_token = request.cookies.get("access_token")
     
@@ -100,6 +124,9 @@ async def get_cart(request: Request):
     return templates.TemplateResponse("cart.html", {"request": request, "email": email, "token": jwt_token})
 
 @app.get("/wishlist", response_class=HTMLResponse)
+@log_to_kafka
+@api_metrics()
+@trace_function(name="get_wishlist", include_request=True)
 async def get_wishlist(request: Request):
     jwt_token = request.cookies.get("access_token")
     
@@ -122,6 +149,9 @@ async def get_wishlist(request: Request):
     return templates.TemplateResponse("wishlist.html", {"request": request, "email": email})
 
 @app.get("/orders", response_class=HTMLResponse)
+@log_to_kafka
+@api_metrics()
+@trace_function(name="get_orders", include_request=True)
 async def get_orders(request: Request):
     jwt_token = request.cookies.get("access_token")
     
@@ -144,19 +174,31 @@ async def get_orders(request: Request):
     return templates.TemplateResponse("orders.html", {"request": request, "email": email})
 
 @app.get("/login", response_class=HTMLResponse)
+@log_to_kafka
+@api_metrics()
+@trace_function(name="login", include_request=True)
 async def login(request: Request):
     return templates.TemplateResponse("login.html", {"request": request})
 
 @app.get("/product", response_class=HTMLResponse)
+@log_to_kafka
+@api_metrics()
+@trace_function(name="product", include_request=True)
 async def product(request: Request):
     jwt_token = request.cookies.get("access_token")
     return templates.TemplateResponse("product.html", {"request": request, "token": jwt_token})
 
 @app.get("/signup", response_class=HTMLResponse)
+@log_to_kafka
+@api_metrics()
+@trace_function(name="signup", include_request=True)
 async def signup(request: Request):
     return templates.TemplateResponse("signup.html", {"request": request})
 
 @app.post("/register")
+@log_to_kafka
+@api_metrics()
+@trace_function(name="register", include_request=True)
 async def register(request: Request, email: str = Form(...), password: str = Form(...), client: httpx.AsyncClient = Depends(get_http_client)):
     """Send a registration request to the auth service."""
     try:
@@ -174,6 +216,9 @@ async def register(request: Request, email: str = Form(...), password: str = For
         return templates.TemplateResponse("signup.html", {"request": request, "error": f"Ошибка сервера: {str(e)}"})
 
 @app.post("/login")
+@log_to_kafka
+@api_metrics()
+@trace_function(name="login_action", include_request=True)
 async def login_action(request: Request, email: str = Form(...), password: str = Form(...), client: httpx.AsyncClient = Depends(get_http_client)):
     """Send a login request to the auth service."""
     print("DEBUG: main_service in post login")
@@ -201,6 +246,9 @@ async def login_action(request: Request, email: str = Form(...), password: str =
         return templates.TemplateResponse("login.html", {"request": request, "error": f"Ошибка сервера: {str(e)}"})
 
 @app.get("/logout")
+@log_to_kafka
+@api_metrics()
+@trace_function(name="logout", include_request=True)
 async def logout(response: Response):
     """Logout the user by clearing the access token cookie."""
     response = RedirectResponse(url="/", status_code=303)
