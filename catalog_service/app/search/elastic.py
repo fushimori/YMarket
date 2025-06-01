@@ -68,10 +68,9 @@ async def create_index():
             },
             "mappings": {
                 "properties": {
-                    "title": {
+                    "name": {
                         "type": "text",
                         "analyzer": "autocomplete",
-                        "search_analyzer": "standard"
                     },
                     "description": {
                         "type": "text",
@@ -91,9 +90,6 @@ async def create_index():
             index=INDEX_NAME,
             body=index_config
         )
-
-
-
 
 
 async def index_product(product: dict):
@@ -116,7 +112,7 @@ async def search_products(query: str):
         "query": {
             "multi_match": {
                 "query": query,
-                "fields": ["title^3", "description"],
+                "fields": ["name^2", "description"],
                 "fuzziness": "AUTO"
             }
         }
