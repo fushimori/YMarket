@@ -8,7 +8,7 @@ from sqlalchemy.orm import selectinload
 
 
 # Получение всех продуктов с пагинацией
-async def get_all_products(db: AsyncSession, category: int = None, search: str = '', skip: int = 0, limit: int = 100):
+async def get_all_products(db: AsyncSession, category: int = None, search: str = '', skip: int = 0, limit: int = 1000):
     # print("DEBUG CATALOG FUNCTION, get_all_products, search", search)
     if category:
         if search != '':

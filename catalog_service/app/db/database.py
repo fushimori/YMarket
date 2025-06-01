@@ -15,7 +15,7 @@ DATABASE_URL = (
 engine = create_async_engine(DATABASE_URL, echo=True)
 
 # Асинхронная фабрика сессий
-SessionLocal = sessionmaker(
+async_session = sessionmaker(
     bind=engine,
     class_=AsyncSession,
     expire_on_commit=False
@@ -26,5 +26,5 @@ Base = declarative_base()
 
 # Генератор сессий
 async def get_db():
-    async with SessionLocal() as session:
+    async with async_session() as session:
         yield session
