@@ -12,6 +12,8 @@ from jwt import decode, DecodeError, ExpiredSignatureError
 from fastapi.security import OAuth2PasswordBearer
 from logging_decorator import log_to_kafka
 from metrics import api_metrics, metrics_endpoint
+from config.tracing import setup_tracing
+from metrics.tracing_decorator import trace_function
 
 
 SECRET_KEY = "your_secret_key"
@@ -31,6 +33,9 @@ def verify_token(token: str):
 # FastAPI Application
 app = FastAPI()
 
+# Инициализация трейсинга
+tracer = setup_tracing(app)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -41,10 +46,12 @@ app.add_middleware(
 
 # Application lifespan for initializing the database
 @app.on_event("startup")
+@trace_function(name="startup_event")
 async def app_startup():
     await init_db()
 
 @app.get("/metrics")
+@trace_function(name="get_metrics", include_request=True)
 async def get_metrics():
     """Эндпоинт для Prometheus"""
     return await metrics_endpoint()
@@ -52,6 +59,7 @@ async def get_metrics():
 @app.get("/get_user_id")
 @log_to_kafka
 @api_metrics()
+@trace_function(name="get_user_id", include_request=True)
 async def get_user_id(email: str, db: AsyncSession = Depends(get_db)):
     user = await get_user_by_email(db, email)
     return {"user_id": user.id}
@@ -59,6 +67,7 @@ async def get_user_id(email: str, db: AsyncSession = Depends(get_db)):
 @app.get("/role")
 @log_to_kafka
 @api_metrics()
+@trace_function(name="get_role", include_request=True)
 async def get_role(email: str, db: AsyncSession = Depends(get_db)):
     user = await get_user_by_email(db, email)
     return {"role": user.role}
@@ -66,6 +75,7 @@ async def get_role(email: str, db: AsyncSession = Depends(get_db)):
 @app.get("/profile")
 @log_to_kafka
 @api_metrics()
+@trace_function(name="get_profile", include_request=True)
 async def get_profile(email: str, db: AsyncSession = Depends(get_db)):
     """Получить профиль текущего пользователя по email."""
     print(f"DEBUG: Fetching profile for user {email}")
@@ -82,6 +92,7 @@ async def get_profile(email: str, db: AsyncSession = Depends(get_db)):
 @app.post("/create_order")
 @log_to_kafka
 @api_metrics()
+@trace_function(name="create_order", include_request=True)
 async def create_user_order(request: Request, token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)):
     print("DEBUG AUTH SERVICE create_user_order" )
     try:
@@ -108,6 +119,7 @@ async def create_user_order(request: Request, token: str = Depends(oauth2_scheme
 @app.get("/")
 @log_to_kafka
 @api_metrics()
+@trace_function(name="health_check", include_request=True)
 async def health_check():
     """Эндпоинт проверки работоспособности."""
     return {"status": "auth_service running"}
@@ -115,6 +127,7 @@ async def health_check():
 @app.post("/register")
 @log_to_kafka
 @api_metrics()
+@trace_function(name="register", include_request=True)
 async def register(request: Request, db: AsyncSession = Depends(get_db)):
     """Handle user registration."""
     try:
@@ -141,6 +154,7 @@ async def register(request: Request, db: AsyncSession = Depends(get_db)):
 @app.post("/login")
 @log_to_kafka
 @api_metrics()
+@trace_function(name="login", include_request=True)
 async def login(request: Request, db: AsyncSession = Depends(get_db)):
     """Handle user login."""
     try:

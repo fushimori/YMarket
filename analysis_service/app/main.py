@@ -6,6 +6,8 @@ from consumers.kafka_consumer import KafkaLogConsumer
 from storage.index_manager import IndexManager
 from storage.elastic_client import ElasticClient
 from metrics import api_metrics, metrics_endpoint
+from config.tracing import setup_tracing
+from metrics.tracing_decorator import trace_function
 import asyncio
 import logging
 import jwt
@@ -15,6 +17,9 @@ app = FastAPI(
     description="Сервис для сбора и анализа логов, метрик и трейсов",
     version="1.0.0"
 )
+
+# Инициализация трейсинга
+tracer = setup_tracing(app)
 
 app.include_router(router)
 
@@ -75,13 +80,15 @@ async def shutdown_event():
 
 @app.get("/health")
 @api_metrics()
+@trace_function(name="health_check", include_request=True)
 async def health_check():
     """
     Проверка работоспособности сервиса
     """
-    return {"status": "healthy"} 
+    return {"status": "healthy"}
 
 @app.get("/metrics")
+@trace_function(name="get_metrics", include_request=True)
 async def get_metrics():
     """
     Получение метрик сервиса
