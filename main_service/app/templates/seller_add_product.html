@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Добавить товар</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <h1>Добавить товар</h1>
+    <form id="singleProductForm" action="/seller/add_product" method="post">
+        <input type="text" name="name" placeholder="Название товара" required>
+        <input type="number" name="price" placeholder="Цена" required>
+        <input type="text" name="category" placeholder="Категория">
+        <textarea name="description" placeholder="Описание"></textarea>
+        <button type="submit">Добавить один товар</button>
+    </form>
+    <h2>Или загрузить несколько товаров файлом</h2>
+    <form id="bulkUploadForm" action="/seller/add_product" method="post" enctype="multipart/form-data">
+        <input type="file" name="file" accept=".json,.csv,.xml" required>
+        <button type="submit">Загрузить файл</button>
+    </form>
+    {% if success %}
+        <p style="color: green;">{{ success }}</p>
+    {% endif %}
+    {% if error %}
+        <p style="color: red;">{{ error }}</p>
+    {% endif %}
+    {% if result %}
+        <pre>{{ result }}</pre>
+    {% endif %}
+    <a href="/profile">Вернуться в профиль</a>
+</body>
+</html> 

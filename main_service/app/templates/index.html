@@ -19,7 +19,7 @@
                 <a href="/login">Вход</a>
                 <a href="/signup">Регистрация</a>
             {% endif %}
-            <a href="/cart">Корзина</a>
+            <a href="/cart" id="cart-link">Корзина</a>
         </div>
     </header>
     <div class="container">
@@ -40,7 +40,46 @@
 document.addEventListener('DOMContentLoaded', () => {
     loadCategories();
     loadProducts();
+    checkUserRoleAndHideCart();
 });
+
+async function checkUserRoleAndHideCart() {
+    const jwt_token = "{{ request.cookies.access_token }}";
+    if (!jwt_token) {
+        console.log("DEBUG: No JWT token found for role check.");
+        return;
+    }
+
+    try {
+        const base64Url = jwt_token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+        const payload = JSON.parse(jsonPayload);
+        const email = payload.sub;
+
+        if (!email) {
+            console.error("ERROR: Email not found in JWT payload.");
+            return;
+        }
+
+        const response = await fetch(`http://localhost:8001/role?email=${email}`);
+        if (response.ok) {
+            const data = await response.json();
+            if (data.role === 'seller') {
+                const cartLink = document.getElementById('cart-link');
+                if (cartLink) {
+                    cartLink.style.display = 'none';
+                }
+            }
+        } else {
+            console.error('Ошибка при получении роли пользователя:', response.status, response.statusText);
+        }
+    } catch (error) {
+        console.error('Ошибка при получении роли пользователя:', error);
+    }
+}
 
 async function loadCategories() {
     try {

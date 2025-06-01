@@ -3,15 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Регистрация</title>
+    <title>Регистрация продавца</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-    <h1>Регистрация</h1>
-    <form action="/register" method="POST">
+    <h1>Регистрация продавца</h1>
+    <form action="/register/seller" method="POST">
         <input type="text" name="email" placeholder="Электронная почта" required>
         <input type="password" name="password" placeholder="Пароль" required>
-        <button type="submit">Зарегистрироваться</button>
+        <input type="text" name="shop_name" placeholder="Название магазина" required>
+        <input type="text" name="inn" placeholder="ИНН (необязательно)">
+        <input type="text" name="description" placeholder="Описание магазина (необязательно)">
+        <button type="submit">Зарегистрироваться как продавец</button>
         {% if success %}
             <p style="color: green;">{{ success }}</p>
         {% endif %}
@@ -19,7 +22,7 @@
             <p style="color: red;">{{ error }}</p>
         {% endif %}
     </form>
-    <a href="/signup/seller">Зарегистрироваться как продавец</a>
+    <a href="/signup">Обычная регистрация</a>
     <a href="/">Вернуться на главную</a>
 </body>
-</html>
+</html> 

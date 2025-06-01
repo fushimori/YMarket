@@ -243,6 +243,32 @@ services:
     networks:
       - mynetwork
 
+  elasticsearch_engine:
+    image: elasticsearch:8.12.1
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - xpack.security.transport.ssl.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ports:
+      - "9201:9201"
+    volumes:
+      - ./catalog_service/app/search/synonyms.txt:/usr/share/elasticsearch/config/synonyms.txt
+    networks:
+      - mynetwork
+
+
+  kibana:
+    image: kibana:8.12.1
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch_engine
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch_engine:9201
+    networks:
+      - mynetwork
+
 networks:
   mynetwork:
     driver: bridge

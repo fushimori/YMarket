@@ -2,15 +2,15 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from fastapi import HTTPException
-from db.models import Product, Category, Seller
-from db.schemas import ProductBase, Product as ProductSchema, CategorySchemas, ProductBase, SellerSchemas
+from db.models import Product, Category
+from db.schemas import ProductBase, Product as ProductSchema, CategorySchemas, ProductBase
 from sqlalchemy.orm import selectinload
 from metrics import db_metrics
 
 
 # Получение всех продуктов с пагинацией
 @db_metrics(operation="get_all_products")
-async def get_all_products(db: AsyncSession, category: int = None, search: str = '', skip: int = 0, limit: int = 100):
+async def get_all_products(db: AsyncSession, category: int = None, search: str = '', skip: int = 0, limit: int = 1000):
     # print("DEBUG CATALOG FUNCTION, get_all_products, search", search)
     if category:
         if search != '':
@@ -37,12 +37,28 @@ async def get_all_products(db: AsyncSession, category: int = None, search: str =
 # Получение одного продукта
 @db_metrics(operation="get_product_by_id")
 async def get_product_by_id(db: AsyncSession, product_id: int):
-    result = await db.execute(select(Product).filter(Product.id == product_id))
+    result = await db.execute(
+        select(Product)
+        .options(selectinload(Product.category), selectinload(Product.images))
+        .filter(Product.id == product_id)
+    )
     product = result.scalar_one_or_none()
-    products_list = ProductBase.from_orm(product)
 
-    products_dict = products_list.dict()
-    print("DEBUG CATALOG FUNCTION, get_product_by_id, products_dict", products_dict)
+    if product is None:
+        return None
+
+    products_dict = {
+        "id": product.id,
+        "name": product.name,
+        "description": product.description,
+        "price": product.price,
+        "stock": product.stock,
+        "category_id": product.category_id,
+        "seller_id": product.seller_id,
+        "category": {"id": product.category.id, "name": product.category.name} if product.category else None,
+        "images": None
+    }
+
     return products_dict
 
 @db_metrics(operation="get_all_categories")
@@ -59,13 +75,14 @@ async def get_all_categories(db: AsyncSession):
 
 @db_metrics(operation="get_seller_by_id")
 async def get_seller_by_id(db: AsyncSession, seller_id: int):
-    result = await db.execute(select(Seller).filter(Seller.id == seller_id))
-    seller = result.scalar_one_or_none()
-    seller_id_list = SellerSchemas.from_orm(seller)
+    pass
+    # result = await db.execute(select(Seller).filter(Seller.id == seller_id))
+    # seller = result.scalar_one_or_none()
+    # seller_id_list = SellerSchemas.from_orm(seller)
 
-    seller_id_dict = seller_id_list.dict()
-    print("DEBUG CATALOG FUNCTION, get_product_by_id, products_dict", seller_id_dict)
-    return seller_id_dict
+    # seller_id_dict = seller_id_list.dict()
+    # print("DEBUG CATALOG FUNCTION, get_product_by_id, products_dict", seller_id_dict)
+    # return seller_id_dict
 
 # Создание нового товара
 @db_metrics(operation="create_product")
@@ -83,37 +100,67 @@ async def create_product(db: AsyncSession, name: str, description: str, price: f
     db.add(new_product)
     await db.commit()  # Сохраняем в базу данных
     await db.refresh(new_product)  # Обновляем объект с последними данными из базы
-    return new_product
+
+    # Явно загружаем связанные отношения для response_model
+    loaded_product = await db.execute(
+        select(Product)
+        .options(selectinload(Product.category), selectinload(Product.images))
+        .filter(Product.id == new_product.id)
+    )
+    return loaded_product.scalar_one_or_none()
 
 # Обновление продукта
 # Обновление продукта
 @db_metrics(operation="update_product")
 async def update_product(db: AsyncSession, product_id: int, name: str, description: str, price: float, stock: int):
-    # Получаем продукт по ID
-    product = await get_product_by_id(db, product_id)
-    if not product:
+    # Получаем продукт по ID как SQLAlchemy-модель, с жадной загрузкой отношений
+    result = await db.execute(
+        select(Product)
+        .options(selectinload(Product.category), selectinload(Product.images))
+        .filter(Product.id == product_id)
+    )
+    product_model = result.scalar_one_or_none()
+
+    if not product_model:
         raise HTTPException(status_code=404, detail="Product not found")
 
     # Проверка на отрицательные значения для цены и количества
     if price < 0 or stock < 0:
         raise HTTPException(status_code=400, detail="Price and stock must be non-negative.")
-
+    
     # Обновление данных продукта
-    product.name = name
-    product.description = description
-    product.price = price
-    product.stock = stock
+    product_model.name = name
+    product_model.description = description
+    product_model.price = price
+    product_model.stock = stock
+
     await db.commit()
-    await db.refresh(product)
-    return product
+    await db.refresh(product_model)
+
+    # Явное преобразование в словарь
+    loaded_product = await db.execute(
+        select(Product)
+        .options(selectinload(Product.category), selectinload(Product.images))
+        .filter(Product.id == product_model.id)
+    )
+    return loaded_product.scalar_one_or_none()
 
 
 # Удаление товара
 @db_metrics(operation="delete_product")
 async def delete_product(db: AsyncSession, product_id: int):
-    product = await get_product_by_id(db, product_id)
-    if not product:
+    # Получаем продукт по ID как SQLAlchemy-модель, с жадной загрузкой отношений
+    result = await db.execute(
+        select(Product)
+        .options(selectinload(Product.category), selectinload(Product.images))
+        .filter(Product.id == product_id)
+    )
+    product_model = result.scalar_one_or_none()
+
+    if not product_model:
         raise HTTPException(status_code=404, detail="Product not found")
-    await db.delete(product)
+    
+    await db.delete(product_model)
     await db.commit()
-    return product
+
+    return product_id # Возвращаем ID удаленного товара
