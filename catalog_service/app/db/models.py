@@ -13,11 +13,11 @@ class Product(Base):
     stock = Column(Integer, default=0)  # Количество в наличии
     active = Column(Boolean, default=True)  # Признак активного товара
     category_id = Column(Integer, ForeignKey("categories.id"))  # Связь с категорией товара
-    seller_id = Column(Integer, ForeignKey("sellers.id"))  # Продавец товара
+    seller_id = Column(Integer)  # Продавец товара
 
     # Связи
     category = relationship("Category", back_populates="products")
-    seller = relationship("Seller", back_populates="products")
+    # seller = relationship("Seller", back_populates="products")
     images = relationship("ProductImage", back_populates="product")
     reviews = relationship("Review", back_populates="product")
     questions = relationship("Question", back_populates="product")
@@ -32,15 +32,13 @@ class Category(Base):
     # Связь с товарами
     products = relationship("Product", back_populates="category")
 
-class Seller(Base):
-    __tablename__ = "sellers"
+# class Seller(Base):
+#     __tablename__ = "sellers"
 
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, index=True, nullable=False)
-    description = Column(String, nullable=True)
+#     id = Column(Integer, primary_key=True, index=True)
+#     id_auth = Column(Integer, nullable=False)
 
-    # Связь с товарами
-    products = relationship("Product", back_populates="seller")
+#     products = relationship("Product", back_populates="seller")
 
 class ProductImage(Base):
     __tablename__ = "product_images"

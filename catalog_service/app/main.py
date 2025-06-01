@@ -1,16 +1,31 @@
 # catalog_service/app/main.py
 
-from fastapi import FastAPI, Depends, HTTPException, Query
+from fastapi import FastAPI, Depends, HTTPException, Query, Header, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 from db.database import get_db
-from db.schemas import ProductBase, Product as ProductSchema, CategorySchemas  # Импортируем Pydantic модель
+from db.schemas import ProductBase, Product as ProductSchema, CategorySchemas, ProductCreate  # Импортируем Pydantic модель и ProductCreate
 from typing import List, AsyncGenerator
 from db.functions import *
 from db.init_db import init_db
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import OAuth2PasswordBearer
+import jwt
 from search.elastic import create_index, index_product, delete_product_from_index, search_products
 import asyncio
 
+SECRET_KEY = "your_secret_key"
+ALGORITHM = "HS256"
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+def verify_token(token: str):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id: int = payload.get("id")
+        if user_id is None:
+            raise HTTPException(status_code=401, detail="Invalid token")
+        return user_id
+    except Exception as e:
+        raise HTTPException(status_code=401, detail="Invalid token")
 
 async def lifespan(app: FastAPI) -> AsyncGenerator:
     await init_db()
@@ -85,7 +100,8 @@ async def read_product(product_id: int, db: AsyncSession = Depends(get_db)):
     return product
 
 @app.post("/products", response_model=ProductSchema)
-async def create_new_product(product: ProductBase, db: AsyncSession = Depends(get_db)):
+async def create_new_product(product: ProductCreate, db: AsyncSession = Depends(get_db)):
+    # Извлекаем параметры из объекта ProductCreate
     new_product = await create_product(
         db,
         name=product.name,
@@ -99,11 +115,20 @@ async def create_new_product(product: ProductBase, db: AsyncSession = Depends(ge
     return new_product
 
 
-
-@app.put("/products/{product_id}", response_model=ProductSchema)
+@app.put("/edit_product/{product_id}", response_model=ProductSchema)
 async def update_existing_product(
-    product_id: int, product: ProductBase, db: AsyncSession = Depends(get_db)
+    product_id: int, product: ProductBase, token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)
 ):
+    user_id = verify_token(token)
+
+    existing_product = await get_product_by_id(db, product_id)
+    if not existing_product:
+        raise HTTPException(status_code=404, detail="Product not found")
+
+    if existing_product['seller_id'] != user_id:
+        raise HTTPException(status_code=403, detail="You do not have permission to update this product")
+
+    # Передаем параметры из объекта product в функцию update_product
     updated_product = await update_product(
         db,
         product_id,
@@ -118,12 +143,19 @@ async def update_existing_product(
     return updated_product
 
 
+@app.delete("/products/{product_id}")
+async def delete_existing_product(product_id: int, token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)):
+    user_id = verify_token(token)
 
-@app.delete("/products/{product_id}", response_model=ProductSchema)
-async def delete_existing_product(product_id: int, db: AsyncSession = Depends(get_db)):
-    deleted_product = await delete_product(db, product_id)
-    if not deleted_product:
+    existing_product = await get_product_by_id(db, product_id)
+    if not existing_product:
         raise HTTPException(status_code=404, detail="Product not found")
-    await delete_product_from_index(product_id)  # Удаляем из Elasticsearch
-    return deleted_product
 
+    if existing_product['seller_id'] != user_id:
+        raise HTTPException(status_code=403, detail="You do not have permission to delete this product")
+
+    deleted_product_id = await delete_product(db, product_id)
+    if not deleted_product_id:
+        raise HTTPException(status_code=500, detail="Failed to delete product")
+    
+    return {"message": f"Product with ID {deleted_product_id} deleted successfully"}

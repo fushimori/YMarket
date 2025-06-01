@@ -27,24 +27,49 @@
 
         function renderProfile(profileData) {
             const profileContainer = document.getElementById('profileContainer');
-            profileContainer.innerHTML = `
-                <header>
-                    <div><h1>Lakomka</h1></div>
-                    <div>
-                        <a href="/">Главная</a>
-                        <a href="/logout">Выйти</a>
+            if (profileData.role === 'seller') {
+                const seller = profileData.seller_info || {};
+                profileContainer.innerHTML = `
+                    <header>
+                        <div><h1>Lakomka</h1></div>
+                        <div>
+                            <a href="/">Главная</a>
+                            <a href="/logout">Выйти</a>
+                        </div>
+                    </header>
+                    <div class="profile-info">
+                        <h1>Профиль продавца: ${profileData.email}</h1>
+                        <p>Название магазина: ${seller.shop_name || '-'}</p>
+                        <p>ИНН: ${seller.inn || '-'}</p>
+                        <p>Описание: ${seller.description || '-'}</p>
                     </div>
-                </header>
-                <div class="profile-info">
-                    <h1>Профиль для: ${profileData.email}</h1>
-                    <p>Статус: ${profileData.is_active ? 'Активен' : 'Неактивен'}</p>
-                    <p>Номер карты лояльности: ${profileData.loyalty_card_number || 'Не доступно'}</p>
-                </div>
-                <div class="actions">
-                    <h2><a href="/wishlist" class="wishlist-button">Список желаемого</a></h2>
-                    <h2><a href="/orders" class="orders-button">Заказы</a></h2>
-                </div>
-            `;
+                    <div class="actions">
+                        <h2><a href="/seller/edit" class="edit-button">Редактировать данные</a></h2>
+                        <h2><a href="/seller/products" class="products-button">Список товаров</a></h2>
+                        <h2><a href="/seller/add_product" class="add-product-button">Добавить товары</a></h2>
+                        <h2><a href="/seller/metrics" class="metrics-button">Метрики</a></h2>
+                    </div>
+                `;
+            } else {
+                profileContainer.innerHTML = `
+                    <header>
+                        <div><h1>Lakomka</h1></div>
+                        <div>
+                            <a href="/">Главная</a>
+                            <a href="/logout">Выйти</a>
+                        </div>
+                    </header>
+                    <div class="profile-info">
+                        <h1>Профиль для: ${profileData.email}</h1>
+                        <p>Статус: ${profileData.is_active ? 'Активен' : 'Неактивен'}</p>
+                        <p>Номер карты лояльности: ${profileData.loyalty_card_number || 'Не доступно'}</p>
+                    </div>
+                    <div class="actions">
+                        <h2><a href="/wishlist" class="wishlist-button">Список желаемого</a></h2>
+                        <h2><a href="/orders" class="orders-button">Заказы</a></h2>
+                    </div>
+                `;
+            }
         }
     </script>
 </head>

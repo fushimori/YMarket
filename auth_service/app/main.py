@@ -7,7 +7,7 @@ from db.database import get_db
 from sqlalchemy.ext.asyncio import AsyncSession
 from db.functions import *
 from db.init_db import init_db
-from db.schemas import UserBase, OrderItemBase, OrderBase
+from db.schemas import UserBase, OrderItemBase, OrderBase, SellerRegister
 import jwt
 from fastapi.security import OAuth2PasswordBearer
 from jwt import DecodeError, ExpiredSignatureError, decode
@@ -144,3 +144,37 @@ async def login(request: Request, db: AsyncSession = Depends(get_db)):
         raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/register/seller")
+async def register_seller_endpoint(request: Request, db: AsyncSession = Depends(get_db)):
+    """Регистрация продавца (seller)."""
+    try:
+        data = await request.json()
+        password = data.get("password")
+        if not password:
+            raise HTTPException(status_code=400, detail="Password is required")
+        hashed_password = hash_password(password)
+        seller_data = SellerRegister(
+            email=data.get("email"),
+            password=hashed_password,
+            shop_name=data.get("shop_name"),
+            inn=data.get("inn"),
+            description=data.get("description")
+        )
+        user, seller = await register_seller(db, seller_data)
+        return {"status": "success", "message": f"Seller {user.email} successfully registered", "user_id": user.id, "seller_id": seller.id}
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/seller/{user_id}")
+async def get_seller_info(user_id: int, db: AsyncSession = Depends(get_db)):
+    """Получить информацию о продавце по user_id."""
+    seller = await get_seller_by_user_id(db, user_id)
+    return {
+        "user_id": seller.user_id,
+        "shop_name": seller.shop_name,
+        "inn": seller.inn,
+        "description": seller.description
+    }

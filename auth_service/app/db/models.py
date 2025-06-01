@@ -66,3 +66,14 @@ class OrderItem(Base):
     #  Связи
     order = relationship("Order", back_populates="order_items")
     # product = relationship("Product", back_populates="order_items")
+
+class Seller(Base):
+    __tablename__ = "sellers"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), unique=True, nullable=False)
+    shop_name = Column(String, nullable=False)
+    inn = Column(String, nullable=True)
+    description = Column(String, nullable=True)
+
+    user = relationship("User")
