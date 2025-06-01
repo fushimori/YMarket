@@ -112,7 +112,7 @@ async def search_products(query: str):
         "query": {
             "multi_match": {
                 "query": query,
-                "fields": ["name^2", "description"],
+                "fields": ["name", "description"],
                 "fuzziness": "AUTO"
             }
         }
