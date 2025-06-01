@@ -51,6 +51,10 @@ async def create_index():
                             "type": "stemmer",
                             "language": "russian"
                         }
+                        # "synonym_filter": {
+                        #     "type": "synonym",
+                        #     "synonyms_path": "synonyms.txt",
+                        # }
                     },
                     "analyzer": {
                         "autocomplete": {
@@ -60,7 +64,8 @@ async def create_index():
                                 "lowercase",
                                 "russian_stop",
                                 "russian_stemmer",
-                                "autocomplete_filter"
+                                "synonym_filter",
+                                #"autocomplete_filter"
                             ]
                         }
                     }
@@ -90,6 +95,7 @@ async def create_index():
             index=INDEX_NAME,
             body=index_config
         )
+
 
 
 async def index_product(product: dict):

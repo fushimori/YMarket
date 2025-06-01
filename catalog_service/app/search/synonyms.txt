@@ -1,42 +1,147 @@
-эппл => apple
-эпл => apple
-appl => apple
-
-асус => asus
-
-ксиоми => xiaomi
-сяоми => xiaomi
-сяом => xiaomi
-
-логитеч => logitech
-логитек => logitech
-
-разер => razer
-рэйзер => razer
-
-ленова => lenovo
-леново => lenovo
-
-эйсер => acer
-асер => acer
-
-мси => msi
-
-аос => aoc
-
-самсунг => samsung
-
-дэлл => dell
-делл => dell
-дэл => dell
-дел => dell
-
-ашпи => hp
-эшпи => hp
-
-элджи => lg
-лг => lg
-
-бенку => benq
-бенк => benq
-бэнку => benq
+эппл,эпл,appl,apple
+ашпи,эшпи,hp
+асус,asus,vivobook,vivo
+макбук,macbook
+роуг,rog
+зенбук,zenbook
+экспертбук,expertbook
+павильон,pavilion
+омэн,omen
+элит,elite
+збук,zbook
+спектр,spectre
+эникс,envy
+эйсер,асер,acer
+нитро,nitro
+предатор,predator
+свифт,swift
+концепт,concept
+лэново,ленова,леново,lenovo
+идеапад,ideapad
+легион,legion
+йога,yoga
+тхинкпад,thinkpad
+мси,msi
+гф,gf
+креатор,creator
+райдер,raider
+дэлл,делл,дэл,дел,dell
+икс-пи-эс,xps
+алиенвар,alienware
+пресижн,precision
+инспирон,inspiron
+латитуд,latitude
+разер,рэйзер,razer
+блейд,blade
+бук,book
+майкрософт,софт,microsoft
+серфейс,surface
+про,pro
+хуавей,huawei
+матебук,matebook
+гигабайт,gigabyte
+аорус,aorus
+электроникс,electronics
+самсунг,samsung
+одиссе,odyssey
+крг,crg
+вьюфинити,viewfinity
+спейс,space
+элджи,лг,lg
+ультрафайн,ultrafine
+нано,nano
+бенку,бенк,бэнку,benq
+пд,pd
+екс,ex
+вьюсоник,viewsonic
+аос,aoc
+джи,g
+филипс,philips
+эизо,eizo
+колорэдж,coloredge
+флексскан,flexscan
+ксиоми,сяоми,сяом,xiaomi
+ми,mi
+логитеч,логитек,logitech
+г про,g pro
+мх,mx
+мастер,master
+стилсерис,steelseries
+апекс,apex
+ривал,rival
+аэрокс,aerox
+прайм,prime
+корсар,corsair
+к,k
+дарк,dark
+айронклау,ironclaw
+страф,strafe
+хайперкс,hyperx
+аллой,alloy
+клауд,cloud
+рэзер,razer
+дэсэддер,deathadder
+блэквид,blackwidow
+хантсман,huntsman
+базилиск,basilisk
+нага,naga
+випер,viper
+орната,ornata
+сайноса,cynosa
+даки,ducky
+ван,one
+шайн,shine
+крон,keychron
+вармило,varmilo
+ва,va
+сони,sony
+wh,wh
+мдр,mdr
+боуз,bose
+квиеткомфорт,quietcomfort
+саундлинк,soundlink
+сеннхайзер,sennheiser
+hd,hd
+моментум,momentum
+джэй-би-эль,джейбиэль,джейбл,jbl
+куантум,quantum
+аудио-техника,audio-technica
+атх,ath
+бейердинамик,beyerdynamic
+дт,dt
+эй-кей-джи,акже,akg
+джейбра,jabra
+маршал,marshall
+мэйджор,major
+интел,intel
+кор,core
+ай,i
+эмд,amd
+райзен,ryzen
+энвидиа,nvidia
+гефорс,geforce
+rtx,rtx
+радеон,radeon
+rx,rx
+крушиал,crucial
+баллистикс,ballistix
+джи-скилл,g.skill
+тридент,trident
+вд,wd
+вестерн диджитал,western digital
+блэк,black
+сигейт,seagate
+айронволф,ironwolf
+ноктуа,noctua
+эн-эйч,nh
+энзикт,nzxt
+кракен,kraken
+фрактал,fractal
+дизайн,design
+мешифаи,meshify
+эвага,evga
+супернова,supernova
+дипкул,deepcool
+лиан ли,lian li
+термалтэйк,thermaltake
+тафрам,toughram
