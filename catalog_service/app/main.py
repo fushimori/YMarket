@@ -65,15 +65,21 @@ async def metrics():
 async def read_products(
     searchquery: str = Query(default='', alias="search"),
     category: int = None,
+    seller: int = None,
     db: AsyncSession = Depends(get_db)
 ):
+# print("DEBUG CATALOG SERVICE: seller:", seller, "category:", category)
     if searchquery:  # Если пользователь вводит запрос
         products = await search_products(searchquery)
         if category is not None:
             products = [p for p in products if p["category_id"] == category]
+        if seller is not None:
+            products = [p for p in products if p["seller_id"] == seller]
         return products
     else:
         products = await get_all_products(db, category, "")
+        if seller is not None:
+            products = [p for p in products if p["seller_id"] == seller]
         return products
 
 
