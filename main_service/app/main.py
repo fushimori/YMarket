@@ -483,3 +483,60 @@ async def seller_delete_product(request: Request, id: int = Form(...), client: h
         return RedirectResponse(url="/", status_code=303) # После удаления перенаправляем на профиль
     else:
         raise HTTPException(status_code=response.status_code, detail="Ошибка при удалении товара")
+
+@app.get("/profile/edit", response_class=HTMLResponse)
+@log_to_kafka
+@api_metrics()
+@trace_function(name="edit_profile_page", include_request=True)
+async def edit_profile_page(request: Request, client: httpx.AsyncClient = Depends(get_http_client)):
+    jwt_token = request.cookies.get("access_token")
+    if not jwt_token:
+        return RedirectResponse(url="/login", status_code=303)
+    try:
+        payload = jwt.decode(jwt_token, SECRET_KEY, algorithms=[ALGORITHM])
+        email = payload.get("sub")
+    except Exception:
+        return RedirectResponse(url="/login", status_code=303)
+    # Получаем профиль пользователя
+    resp = await client.get(f"http://auth_service:8001/profile?email={email}")
+    if resp.status_code != 200:
+        return templates.TemplateResponse("profile_edit.html", {"request": request, "error": "Ошибка загрузки профиля"})
+    profile = resp.json()
+    return templates.TemplateResponse("profile_edit.html", {"request": request, "profile": profile})
+
+@app.post("/profile/edit")
+@log_to_kafka
+@api_metrics()
+@trace_function(name="edit_profile_action", include_request=True)
+async def edit_profile_action(request: Request, client: httpx.AsyncClient = Depends(get_http_client)):
+    form = await request.form()
+    role = form.get("role")
+    email = form.get("email")
+    if role == "seller":
+        shop_name = form.get("shop_name")
+        inn = form.get("inn")
+        description = form.get("description")
+        # Отправляем PATCH/POST в auth_service для обновления данных продавца
+        resp = await client.post(
+            f"http://auth_service:8001/profile/edit_seller",
+            json={
+                "email": email,
+                "shop_name": shop_name,
+                "inn": inn,
+                "description": description
+            }
+        )
+    else:
+        loyalty_card_number = form.get("loyalty_card_number")
+        resp = await client.post(
+            f"http://auth_service:8001/profile/edit_user",
+            json={
+                "email": email,
+                "loyalty_card_number": loyalty_card_number
+            }
+        )
+    if resp.status_code == 200:
+        return RedirectResponse(url="/profile", status_code=303)
+    else:
+        error = (await resp.aread()).decode()
+        return templates.TemplateResponse("profile_edit.html", {"request": request, "error": error, "profile": form})

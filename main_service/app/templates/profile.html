@@ -44,10 +44,8 @@
                         <p>Описание: ${seller.description || '-'}</p>
                     </div>
                     <div class="actions">
-                        <h2><a href="/seller/edit" class="edit-button">Редактировать данные</a></h2>
-                        <h2><a href="/seller/products" class="products-button">Список товаров</a></h2>
+                        <h2><a href="/profile/edit" class="edit-button">Редактировать данные</a></h2>
                         <h2><a href="/seller/add_product" class="add-product-button">Добавить товары</a></h2>
-                        <h2><a href="/seller/metrics" class="metrics-button">Метрики</a></h2>
                     </div>
                 `;
             } else {
@@ -65,6 +63,7 @@
                         <p>Номер карты лояльности: ${profileData.loyalty_card_number || 'Не доступно'}</p>
                     </div>
                     <div class="actions">
+                        <h2><a href="/profile/edit" class="edit-button">Редактировать профиль</a></h2>
                         <h2><a href="/wishlist" class="wishlist-button">Список желаемого</a></h2>
                         <h2><a href="/orders" class="orders-button">Заказы</a></h2>
                     </div>

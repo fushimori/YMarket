@@ -221,3 +221,48 @@ async def get_seller_info(user_id: int, db: AsyncSession = Depends(get_db)):
         "inn": seller.inn,
         "description": seller.description
     }
+
+@app.post("/profile/edit_user")
+@log_to_kafka
+@api_metrics()
+@trace_function(name="edit_user_profile", include_request=True)
+async def edit_user_profile(request: Request, db: AsyncSession = Depends(get_db)):
+    data = await request.json()
+    email = data.get("email")
+    loyalty_card_number = data.get("loyalty_card_number")
+    user = await get_user_by_email(db, email)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    # Добавляем/обновляем поле loyalty_card_number (если оно есть в модели)
+    if hasattr(user, "loyalty_card_number"):
+        user.loyalty_card_number = loyalty_card_number
+    else:
+        # Если поля нет, можно добавить динамически (или проигнорировать)
+        pass
+    await db.commit()
+    await db.refresh(user)
+    return {"success": True}
+
+@app.post("/profile/edit_seller")
+@log_to_kafka
+@api_metrics()
+@trace_function(name="edit_seller_profile", include_request=True)
+async def edit_seller_profile(request: Request, db: AsyncSession = Depends(get_db)):
+    data = await request.json()
+    email = data.get("email")
+    shop_name = data.get("shop_name")
+    inn = data.get("inn")
+    description = data.get("description")
+    user = await get_user_by_email(db, email)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    seller_result = await db.execute(select(Seller).filter(Seller.user_id == user.id))
+    seller = seller_result.scalar_one_or_none()
+    if not seller:
+        raise HTTPException(status_code=404, detail="Seller not found")
+    seller.shop_name = shop_name
+    seller.inn = inn
+    seller.description = description
+    await db.commit()
+    await db.refresh(seller)
+    return {"success": True}

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Редактировать профиль</title>
+    <link rel="stylesheet" href="/static/profile.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Редактировать профиль</h1>
+        {% if error %}
+            <p style="color: red;">{{ error }}</p>
+        {% endif %}
+        <form method="post" action="/profile/edit">
+            <input type="hidden" name="role" value="{{ profile.role }}">
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" value="{{ profile.email }}" required readonly>
+            {% if profile.role == 'seller' %}
+                <label for="shop_name">Название магазина:</label>
+                <input type="text" id="shop_name" name="shop_name" value="{{ profile.seller_info.shop_name if profile.seller_info else '' }}" required>
+                <label for="inn">ИНН:</label>
+                <input type="text" id="inn" name="inn" value="{{ profile.seller_info.inn if profile.seller_info else '' }}">
+                <label for="description">Описание магазина:</label>
+                <textarea id="description" name="description">{{ profile.seller_info.description if profile.seller_info else '' }}</textarea>
+            {% else %}
+                <label for="loyalty_card_number">Номер карты лояльности:</label>
+                <input type="text" id="loyalty_card_number" name="loyalty_card_number" value="{{ profile.loyalty_card_number or '' }}">
+            {% endif %}
+            <button type="submit">Сохранить изменения</button>
+        </form>
+        <a href="/profile">Назад в профиль</a>
+    </div>
+</body>
+</html> 
