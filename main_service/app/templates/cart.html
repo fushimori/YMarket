@@ -27,6 +27,7 @@
                         const product = await productResponse.json();
                         item.product_name = product.name;
                         item.product_image = product.image_url || 'https://www.iephb.ru/wp-content/uploads/2021/01/img-placeholder.png';
+                        item.stock = product.stock;
                     }
                 }
 
@@ -58,7 +59,9 @@
                             <div class="item-card">
                                 <img src="${item.product_image}" alt="${item.product_name}">
                                 <p><strong>Название:</strong> ${item.product_name}</p>
-                                <p><strong>Количество:</strong> ${item.quantity}</p>
+                                <p><strong>Количество:</strong> <input type="number" min="1" max="${item.stock}" value="${item.quantity}"
+                                    onblur="updateQuantity(${item.product_id}, this.value, ${item.stock})"
+                                    onkeydown="if(event.key==='Enter'){updateQuantity(${item.product_id}, this.value, ${item.stock})}"> из ${item.stock}</p>
                                 <button class="delete-button" onclick="deleteItem(${item.product_id}, 'YOUR_TOKEN_HERE')">Delete</button>
                             </div>
                         `).join('') : '<p class="empty-message">Ваша корзина пуста</p>'}
@@ -118,7 +121,36 @@
                 location.reload(); // Перезагружаем страницу, чтобы отобразить изменения
             } catch (error) {
                 console.error('Error creating order:', error);
-                alert('Failed to create order');
+            }
+        }
+
+        async function updateQuantity(productId, newQuantity, maxStock) {
+            const token = "{{ token }}";
+            const email = "{{ email }}";
+            // Получаем user_id
+            const userIdResponse = await fetch(`http://localhost:8001/get_user_id?email=${email}`);
+            if (!userIdResponse.ok) return alert('Ошибка получения user_id');
+            const { user_id } = await userIdResponse.json();
+            if (newQuantity < 1 || newQuantity > maxStock) {
+                alert(`Количество должно быть от 1 до ${maxStock}`);
+                return;
+            }
+            try {
+                const response = await fetch(`http://localhost:8004/cart/${user_id}/${productId}?quantity=${newQuantity}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                if (!response.ok) {
+                    const err = await response.json();
+                    alert(err.detail || 'Ошибка обновления количества');
+                } else {
+                    location.reload();
+                }
+            } catch (error) {
+                alert('Ошибка обновления количества');
             }
         }
     </script>

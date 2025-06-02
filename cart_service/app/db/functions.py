@@ -6,6 +6,7 @@ from db.models import Cart, CartItem
 from sqlalchemy.orm import joinedload, selectinload
 from sqlalchemy import text, delete
 from metrics import db_metrics
+import httpx
 
 @db_metrics(operation="get_cart_items")
 async def get_cart_items(db: AsyncSession, user_id: int):
@@ -139,6 +140,16 @@ async def update_product_quantity_in_cart(db: AsyncSession, user_id: int, produc
     if not cart:
         raise HTTPException(status_code=404, detail="Cart not found")
     
+    # Проверяем stock через catalog_service
+    async with httpx.AsyncClient() as client:
+        resp = await client.get(f"http://catalog_service:8003/api/get_product?id={product_id}")
+        if resp.status_code != 200:
+            raise HTTPException(status_code=400, detail="Product not found in catalog")
+        product = resp.json()
+        stock = product.get("stock", 0)
+        if quantity > stock:
+            raise HTTPException(status_code=400, detail=f"Максимальное количество для заказа: {stock}")
+
     # Ищем товар в корзине
     cart_item = await db.execute(select(CartItem).filter(CartItem.product_id == product_id, CartItem.cart_id == cart.id))
     cart_item = cart_item.scalar_one_or_none()
