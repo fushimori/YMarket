@@ -1,6 +1,6 @@
 # catalog_service/app/main.py
 
-from fastapi import FastAPI, Depends, HTTPException, Query, Header, Response
+from fastapi import FastAPI, Depends, HTTPException, Query, Header, Response, Body
 from sqlalchemy.ext.asyncio import AsyncSession
 from db.database import get_db
 from db.schemas import ProductBase, Product as ProductSchema, CategorySchemas, ProductCreate  # Импортируем Pydantic модель и ProductCreate
@@ -42,7 +42,7 @@ tracer = setup_tracing(app)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:8000", "http://main_service:8000", "http://localhost:8003"],  # Укажите адрес фронтенда
+    allow_origins=["http://localhost:8000", "http://main_service:8000", "http://localhost:8003", "http://localhost:8004"],  # Укажите адрес фронтенда
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -199,3 +199,24 @@ async def delete_existing_product(product_id: int, token: str = Depends(oauth2_s
         raise HTTPException(status_code=500, detail="Failed to delete product")
     
     return {"message": f"Product with ID {deleted_product_id} deleted successfully"}
+
+@app.post("/api/products/decrement_stock")
+@log_to_kafka
+@api_metrics()
+@trace_function(name="decrement_stock", include_request=True)
+async def decrement_stock(
+    product_id: int = Body(...),
+    quantity: int = Body(...),
+    db: AsyncSession = Depends(get_db)
+):
+    # Получаем продукт
+    result = await db.execute(select(Product).filter(Product.id == product_id))
+    product = result.scalar_one_or_none()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    if product.stock < quantity:
+        raise HTTPException(status_code=400, detail="Not enough stock")
+    product.stock -= quantity
+    await db.commit()
+    await db.refresh(product)
+    return {"success": True, "product_id": product_id, "new_stock": product.stock}

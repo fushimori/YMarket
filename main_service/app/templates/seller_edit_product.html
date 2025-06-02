@@ -20,6 +20,9 @@
             <label for="description">Описание:</label>
             <textarea id="description" name="description">{{ product.description }}</textarea>
             
+            <label for="stock">Количество на складе:</label>
+            <input type="number" id="stock" name="stock" value="{{ product.stock }}" min="1" required>
+            
             <button type="submit">Сохранить изменения</button>
         </form>
 

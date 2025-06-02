@@ -327,6 +327,7 @@ async def seller_add_product(request: Request, client: httpx.AsyncClient = Depen
         price = form.get("price")
         category_id = form.get("category")
         description = form.get("description")
+        stock = form.get("stock")
         # Получаем seller_id из куки или профиля (тут пример — доработать под свою авторизацию)
         jwt_token = request.cookies.get("access_token")
         if not jwt_token:
@@ -345,7 +346,7 @@ async def seller_add_product(request: Request, client: httpx.AsyncClient = Depen
             "price": price,
             "description": description,
             "seller_id": seller_id,
-            "stock": 1,           # по умолчанию 1
+            "stock": int(stock) if stock else 1,
             "active": True,       # по умолчанию True
             "category_id": int(category_id) if category_id else 1
         }
@@ -393,7 +394,7 @@ async def seller_edit_product_page(request: Request, id: int, client: httpx.Asyn
 @log_to_kafka
 @api_metrics()
 @trace_function(name="seller_update_product", include_request=True)
-async def seller_update_product(request: Request, id: int = Form(...), name: str = Form(...), price: float = Form(...), description: str = Form(None), client: httpx.AsyncClient = Depends(get_http_client)):
+async def seller_update_product(request: Request, id: int = Form(...), name: str = Form(...), price: float = Form(...), description: str = Form(None), stock: int = Form(None), client: httpx.AsyncClient = Depends(get_http_client)):
     jwt_token = request.cookies.get("access_token")
     if not jwt_token:
         raise HTTPException(status_code=401, detail="Необходима авторизация")
@@ -417,10 +418,10 @@ async def seller_update_product(request: Request, id: int = Form(...), name: str
         "name": name,
         "price": price,
         "description": description,
-        "stock": product_data_from_db.get("stock", 0), # Используем существующее значение или дефолтное
-        "active": product_data_from_db.get("active", True), # Используем существующее значение или дефолтное
-        "category_id": product_data_from_db.get("category_id", 1), # Используем существующее значение или дефолтное
-        "seller_id": product_data_from_db.get("seller_id"), # Используем существующее значение
+        "stock": int(stock) if stock is not None else product_data_from_db.get("stock", 0),
+        "active": product_data_from_db.get("active", True),
+        "category_id": product_data_from_db.get("category_id", 1),
+        "seller_id": product_data_from_db.get("seller_id"),
     }
 
     response = await client.put(f"{CATALOG_SERVICE_URL}/edit_product/{id}", json=update_data, headers={"Authorization": f"Bearer {jwt_token}"})

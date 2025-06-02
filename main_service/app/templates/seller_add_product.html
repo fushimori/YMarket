@@ -11,6 +11,7 @@
     <form id="singleProductForm" action="/seller/add_product" method="post">
         <input type="text" name="name" placeholder="Название товара" required>
         <input type="number" name="price" placeholder="Цена" required>
+        <input type="number" name="stock" placeholder="Количество на складе" min="1" required>
         <select name="category" id="categorySelect" required>
             <option value="">Выберите категорию</option>
         </select>

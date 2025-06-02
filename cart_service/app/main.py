@@ -171,6 +171,16 @@ async def create_order(token: str = Depends(oauth2_scheme), db: AsyncSession = D
 
         # Шаг 2: Запрос к корзине для формирования заказа
         if order_id:
+            # Уменьшаем stock у каждого товара
+            for item in cart_data["cart_items"]:
+                try:
+                    requests.post(
+                        "http://catalog_service:8003/api/products/decrement_stock",
+                        json={"product_id": item["product_id"], "quantity": item["quantity"]},
+                        timeout=3
+                    )
+                except Exception as e:
+                    print(f"Ошибка уменьшения stock для товара {item['product_id']}: {e}")
             await clear_user_cart(db, user_id)
 
         return {"message": "Order created successfully"}
