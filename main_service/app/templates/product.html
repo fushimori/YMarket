@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Информация о товаре</title>
-    <link rel="stylesheet" href="/static/product.css">
+    <link rel="stylesheet" href="../static/product.css">
 </head>
 <body>
     <div class="product-container">
@@ -91,6 +91,13 @@
                     const sellerActionsDiv = document.getElementById('seller-actions');
                     if (sellerActionsDiv) {
                         sellerActionsDiv.insertAdjacentHTML('beforeend', editButtonHtml);
+                    }
+                }
+                if (currentUserRole === 'admin') {
+                    const deleteButtonHtml = `<button class="admin-delete-btn" onclick="deleteProductAsAdmin(${productId})">Удалить товар (админ)</button>`;
+                    const sellerActionsDiv = document.getElementById('seller-actions');
+                    if (sellerActionsDiv) {
+                        sellerActionsDiv.insertAdjacentHTML('beforeend', deleteButtonHtml);
                     }
                 }
             } catch (error) {
@@ -192,6 +199,30 @@
             } catch (error) {
                 console.error('Ошибка:', error);
                 document.getElementById('cart-message').textContent = 'Ошибка при добавлении товара в корзину.';
+            }
+        }
+
+        async function deleteProductAsAdmin(productId) {
+            if (!confirm('Вы уверены, что хотите удалить этот товар?')) return;
+            try {
+                const token = "{{ token }}";
+                const response = await fetch(`/admin/delete_product`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ id: productId })
+                });
+                if (!response.ok) {
+                    const err = await response.json();
+                    alert(err.detail || 'Ошибка удаления товара');
+                } else {
+                    alert('Товар удалён');
+                    window.location.href = '/';
+                }
+            } catch (error) {
+                alert('Ошибка удаления товара');
             }
         }
 

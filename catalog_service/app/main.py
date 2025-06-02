@@ -1,6 +1,6 @@
 # catalog_service/app/main.py
 
-from fastapi import FastAPI, Depends, HTTPException, Query, Header, Response, Body
+from fastapi import FastAPI, Depends, HTTPException, Query, Header, Response, Body, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from db.database import get_db
 from db.schemas import ProductBase, Product as ProductSchema, CategorySchemas, ProductCreate  # Импортируем Pydantic модель и ProductCreate
@@ -16,6 +16,7 @@ from search.elastic import create_index, index_product, delete_product_from_inde
 
 from fastapi.security import OAuth2PasswordBearer
 import jwt
+import httpx
 
 SECRET_KEY = "your_secret_key"
 ALGORITHM = "HS256"
@@ -220,3 +221,26 @@ async def decrement_stock(
     await db.commit()
     await db.refresh(product)
     return {"success": True, "product_id": product_id, "new_stock": product.stock}
+
+@app.post("/admin_delete_product")
+@log_to_kafka
+@api_metrics()
+@trace_function(name="admin_delete_product", include_request=True)
+async def admin_delete_product(request: Request, db: AsyncSession = Depends(get_db)):
+    data = await request.json()
+    product_id = data.get("id")
+    token = request.headers.get("Authorization")
+    if not token or not token.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Missing or invalid token")
+    jwt_token = token.split(" ", 1)[1]
+    try:
+        payload = jwt.decode(jwt_token, SECRET_KEY, algorithms=[ALGORITHM])
+        role = payload.get("role")
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    print(role)
+    if role not in ("admin", "RoleEnum.admin"):
+        raise HTTPException(status_code=403, detail="Only admin can delete products")
+    # Удаляем товар
+    deleted_product_id = await delete_product(db, product_id)
+    return {"success": True, "deleted_product_id": deleted_product_id}

@@ -3,7 +3,7 @@ body {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
-    background-color: #f0f8ff; /* Светлый синий фон */
+    background-color: #fff6f2;
     color: #333;
     line-height: 1.6;
 }
@@ -32,14 +32,14 @@ body {
 .product-title {
     font-size: 28px;
     font-weight: bold;
-    color: #0056b3; /* Насыщенный синий */
+    color: #ff7043;
     margin: 10px 0;
 }
 
 /* Цена */
 .product-price {
     font-size: 22px;
-    color: #0056b3;
+    color: #ff7043;
     font-weight: bold;
     margin: 10px 0;
 }
@@ -51,8 +51,6 @@ body {
     margin: 15px 0;
     text-align: center;  /* Выравнивание текста по центру */
 }
-
-
 
 /* Информация о продавце */
 .product-seller {
@@ -67,8 +65,8 @@ body {
     display: inline-block;
     margin: 20px 0;
     padding: 10px 20px;
-    background-color: #0056b3;
-    color: #ffffff;
+    background-color: #ffab00;
+    color: #fff;
     font-size: 16px;
     font-weight: bold;
     border: none;
@@ -78,7 +76,7 @@ body {
 }
 
 #add-to-cart-btn:hover:enabled {
-    background-color: #003d82; /* Более тёмный синий */
+    background-color: #ff7043;
 }
 
 #add-to-cart-btn:disabled {
@@ -90,7 +88,7 @@ body {
 /* Сообщение о корзине */
 #cart-message {
     font-size: 14px;
-    color: #0056b3;
+    color: #ff7043;
     margin-top: 10px;
 }
 
@@ -99,12 +97,35 @@ a {
     display: block;
     margin-top: 20px;
     font-size: 16px;
-    color: #0056b3;
+    color: #ff7043;
     text-decoration: none;
-    font-weight: bold;
-    transition: color 0.3s;
+    font-weight: 500;
+    border-radius: 4px;
+    padding: 6px 14px;
+    transition: color 0.2s, background 0.2s;
 }
 
 a:hover {
-    color: #003d82;
+    color: #fff6f2;
+    background: #ff7043;
+    text-decoration: none;
+}
+
+button, .edit-product-button, .admin-delete-btn {
+    background: linear-gradient(90deg, #ff7043 0%, #ffab00 100%);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 20px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(255,112,67,0.08);
+    transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+}
+
+button:hover, .edit-product-button:hover, .admin-delete-btn:hover {
+    background: linear-gradient(90deg, #ffab00 0%, #ff7043 100%);
+    color: #fff6f2;
+    box-shadow: 0 4px 16px rgba(255,112,67,0.15);
 }

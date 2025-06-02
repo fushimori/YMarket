@@ -540,3 +540,106 @@ async def edit_profile_action(request: Request, client: httpx.AsyncClient = Depe
     else:
         error = (await resp.aread()).decode()
         return templates.TemplateResponse("profile_edit.html", {"request": request, "error": error, "profile": form})
+
+@app.get("/admin/users", response_class=HTMLResponse)
+@log_to_kafka
+@api_metrics()
+@trace_function(name="admin_users_page", include_request=True)
+async def admin_users_page(request: Request, search: str = '', role: str = '', client: httpx.AsyncClient = Depends(get_http_client)):
+    jwt_token = request.cookies.get("access_token")
+    if not jwt_token:
+        return RedirectResponse(url="/login", status_code=303)
+    try:
+        payload = jwt.decode(jwt_token, SECRET_KEY, algorithms=[ALGORITHM])
+        email = payload.get("sub")
+    except Exception:
+        return RedirectResponse(url="/login", status_code=303)
+    # Получаем пользователей из auth_service
+    params = {}
+    if search:
+        params['search'] = search
+    if role:
+        params['role'] = role
+    resp = await client.get(f"http://auth_service:8001/api/users", params=params)
+    users = resp.json() if resp.status_code == 200 else []
+    return templates.TemplateResponse("admin_users.html", {"request": request, "users": users, "search": search, "role": role})
+
+@app.post("/admin/delete_product")
+@log_to_kafka
+@api_metrics()
+@trace_function(name="admin_delete_product", include_request=True)
+async def admin_delete_product(request: Request, client: httpx.AsyncClient = Depends(get_http_client)):
+    data = await request.json()
+    product_id = data.get("id")
+    jwt_token = request.cookies.get("access_token")
+    headers = {"Authorization": f"Bearer {jwt_token}"} if jwt_token else {}
+    resp = await client.post(
+        f"http://catalog_service:8003/admin_delete_product",
+        json={"id": product_id},
+        headers=headers
+    )
+    if resp.status_code != 200:
+        return Response(content=resp.text, status_code=resp.status_code)
+    return {"success": True}
+
+@app.get("/admin/metrics", response_class=HTMLResponse)
+@log_to_kafka
+@api_metrics()
+@trace_function(name="admin_metrics_page", include_request=True)
+async def admin_metrics_page(request: Request):
+    return HTMLResponse("<h1>Здесь будут метрики (заглушка)</h1>")
+
+@app.post("/admin/delete_user")
+@log_to_kafka
+@api_metrics()
+@trace_function(name="admin_delete_user", include_request=True)
+async def admin_delete_user(request: Request, client: httpx.AsyncClient = Depends(get_http_client)):
+    data = await request.json()
+    user_id = data.get("id")
+    jwt_token = request.cookies.get("access_token")
+    headers = {"Authorization": f"Bearer {jwt_token}"} if jwt_token else {}
+    resp = await client.post(
+        f"http://auth_service:8001/admin_delete_user",
+        json={"id": user_id},
+        headers=headers
+    )
+    if resp.status_code != 200:
+        return Response(content=resp.text, status_code=resp.status_code)
+    return {"success": True}
+
+@app.get("/admin/orders", response_class=HTMLResponse)
+@log_to_kafka
+@api_metrics()
+@trace_function(name="admin_orders_page", include_request=True)
+async def admin_orders_page(request: Request, search: str = '', status: str = '', client: httpx.AsyncClient = Depends(get_http_client)):
+    jwt_token = request.cookies.get("access_token")
+    if not jwt_token:
+        return RedirectResponse(url="/login", status_code=303)
+    headers = {"Authorization": f"Bearer {jwt_token}"}
+    params = {}
+    if search:
+        params['search'] = search
+    if status:
+        params['status'] = status
+    resp = await client.get("http://auth_service:8001/admin/orders", params=params, headers=headers)
+    orders = resp.json() if resp.status_code == 200 else []
+    return templates.TemplateResponse("admin_orders.html", {"request": request, "orders": orders, "search": search, "status": status})
+
+@app.post("/admin/update_order_status")
+@log_to_kafka
+@api_metrics()
+@trace_function(name="admin_update_order_status", include_request=True)
+async def admin_update_order_status(request: Request, client: httpx.AsyncClient = Depends(get_http_client)):
+    data = await request.json()
+    order_id = data.get("order_id")
+    status = data.get("status")
+    jwt_token = request.cookies.get("access_token")
+    headers = {"Authorization": f"Bearer {jwt_token}"} if jwt_token else {}
+    resp = await client.post(
+        "http://auth_service:8001/admin/update_order_status",
+        json={"order_id": order_id, "status": status},
+        headers=headers
+    )
+    if resp.status_code != 200:
+        return Response(content=resp.text, status_code=resp.status_code)
+    return {"success": True}

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Пользователи (админ)</title>
+    <link rel="stylesheet" href="../static/profile.css">
+    <style>
+        .user-card { background: #fff; border: 1px solid #ccc; border-radius: 5px; padding: 18px; margin: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.07); cursor:pointer; transition: box-shadow .2s; }
+        .user-card:hover { box-shadow: 0 6px 16px rgba(0,0,0,0.13); background: #f0f8ff; }
+        .user-list { display: flex; flex-wrap: wrap; gap: 20px; }
+        .user-card h3 { margin: 0 0 8px 0; color: #007bff; }
+        .user-card p { margin: 0 0 4px 0; }
+        .filter-bar { margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div><h1 class="brand-red">Ymarket</h1></div>
+            <div>
+                <a href="/profile">Профиль</a>
+                <a href="/logout">Выйти</a>
+            </div>
+        </header>
+        <h1>Пользователи</h1>
+        <form class="filter-bar" method="get" action="/admin/users">
+            <input type="text" name="search" placeholder="Поиск по email..." value="{{ search }}">
+            <select name="role">
+                <option value="">Все роли</option>
+                <option value="user" {% if role=='user' %}selected{% endif %}>Пользователь</option>
+                <option value="seller" {% if role=='seller' %}selected{% endif %}>Селлер</option>
+                <option value="admin" {% if role=='admin' %}selected{% endif %}>Админ</option>
+            </select>
+            <button type="submit">Поиск</button>
+        </form>
+        <div class="user-list">
+            {% for user in users %}
+            <div class="user-card" data-user-id="{{ user.id }}">
+                <h3>{{ user.email }}</h3>
+                <p>Роль: {{ user.role }}</p>
+                <p>Статус: {{ 'Активен' if user.is_active else 'Неактивен' }}</p>
+                {% if user.role == 'seller' and user.seller_info %}
+                    <p>Магазин: {{ user.seller_info.shop_name }}</p>
+                {% endif %}
+                <button class="delete-user-btn" onclick="deleteUser({{ user.id }}, this)">Удалить пользователя</button>
+            </div>
+            {% endfor %}
+            {% if not users %}
+                <p>Нет пользователей по заданным критериям.</p>
+            {% endif %}
+        </div>
+    </div>
+    <script>
+    async function deleteUser(userId, btn) {
+        if (!confirm('Вы уверены, что хотите удалить пользователя?')) return;
+        btn.disabled = true;
+        try {
+            const response = await fetch('/admin/delete_user', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: userId })
+            });
+            if (!response.ok) {
+                const err = await response.json();
+                alert(err.detail || 'Ошибка удаления пользователя');
+                btn.disabled = false;
+            } else {
+                btn.closest('.user-card').remove();
+            }
+        } catch (e) {
+            alert('Ошибка удаления пользователя');
+            btn.disabled = false;
+        }
+    }
+    </script>
+</body>
+</html> 

@@ -3,12 +3,12 @@ body {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
-    background-color: #f5faff;
+    background-color: #fff6f2;
     color: #333;
 }
 
 header {
-    background-color: #007bff;
+    background-color: #ffab00;
     color: white;
     padding: 15px;
     display: flex;
@@ -17,13 +17,19 @@ header {
 }
 
 header a {
-    color: white;
+    color: #fff6f2;
     text-decoration: none;
     margin-left: 15px;
+    font-weight: 500;
+    border-radius: 4px;
+    padding: 6px 14px;
+    transition: color 0.2s, background 0.2s;
 }
 
 header a:hover {
-    text-decoration: underline;
+    color: #ff7043;
+    background: #fff6f2;
+    text-decoration: none;
 }
 
 .container {
@@ -45,7 +51,7 @@ header a:hover {
 .profile-info h1 {
     font-size: 24px;
     margin-bottom: 10px;
-    color: #007bff;
+    color: #ff7043;
 }
 
 .profile-info p {
@@ -68,19 +74,19 @@ header a:hover {
 }
 
 .wishlist-button {
-    background-color: #0069d9;
+    background-color: #ffab00;
 }
 
 .wishlist-button:hover {
-    background-color: #0056b3;
+    background-color: #ff7043;
 }
 
 .orders-button {
-    background-color: #007bff;
+    background-color: #ff7043;
 }
 
 .orders-button:hover {
-    background-color: #0056b3;
+    background-color: #ffab00;
 }
 
 /* Адаптивные стили */
@@ -89,4 +95,56 @@ header a:hover {
         padding: 10px 18px;
         font-size: 16px;
     }
+}
+
+h1 {
+    text-align: center;
+    color: #ff7043;
+    margin-bottom: 20px;
+}
+
+a {
+    color: #ff7043;
+    text-decoration: none;
+    display: block;
+    text-align: center;
+    margin-top: 15px;
+    font-weight: 500;
+    border-radius: 4px;
+    padding: 6px 14px;
+    transition: color 0.2s, background 0.2s;
+}
+
+a:hover {
+    color: #fff6f2;
+    background: #ff7043;
+    text-decoration: none;
+}
+
+button {
+    padding: 10px;
+    background: linear-gradient(90deg, #ff7043 0%, #ffab91 100%);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(255,112,67,0.08);
+    transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+}
+
+button:hover {
+    background: linear-gradient(90deg, #ffab91 0%, #ff7043 100%);
+    color: #fff6f2;
+    box-shadow: 0 4px 16px rgba(255,112,67,0.15);
+}
+
+.brand-red {
+    color: #e53935 !important;
+    font-weight: 900;
+    letter-spacing: 2px;
+    font-size: 2.2rem;
+    margin: 0;
+    text-shadow: 0 2px 8px rgba(229,57,53,0.08);
 }

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Администрирование заказов</title>
+    <link rel="stylesheet" href="../static/orders.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div><h1 class="brand-red">Ymarket</h1></div>
+            <div>
+                <a href="/profile">Профиль</a>
+                <a href="/logout">Выйти</a>
+            </div>
+        </header>
+        <h1>Все заказы</h1>
+        <form method="get" action="/admin/orders" class="filter-bar">
+            <input type="text" name="search" placeholder="Поиск по email..." value="{{ search }}">
+            <select name="status">
+                <option value="">Все статусы</option>
+                <option value="pending" {% if status=='pending' %}selected{% endif %}>В процессе</option>
+                <option value="delivered" {% if status=='delivered' %}selected{% endif %}>Доставлен</option>
+                <option value="cancelled" {% if status=='cancelled' %}selected{% endif %}>Отменён</option>
+            </select>
+            <button type="submit">Поиск</button>
+        </form>
+        <div class="orders-list">
+            {% for order in orders %}
+            <div class="order-card" data-order-id="{{ order.order_id }}">
+                <h3>Заказ №{{ order.order_id }} ({{ order.status }})</h3>
+                <p>Пользователь: {{ order.user_email }}</p>
+                <ul>
+                    {% for item in order["items"] %}
+                    <li data-product-id="{{ item.product_id }}">
+                        <span class="product-name">Товар ID: {{ item.product_id }}</span>
+                        <span>Количество: {{ item.quantity }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+                <form class="status-form" onsubmit="return updateStatus(event, {{ order.order_id }})">
+                    <select name="status">
+                        <option value="pending" {% if order.status=='pending' %}selected{% endif %}>В процессе</option>
+                        <option value="delivered" {% if order.status=='delivered' %}selected{% endif %}>Доставлен</option>
+                        <option value="cancelled" {% if order.status=='cancelled' %}selected{% endif %}>Отменён</option>
+                    </select>
+                    <button type="submit">Изменить статус</button>
+                </form>
+            </div>
+            {% endfor %}
+            {% if not orders %}
+                <p>Нет заказов по заданным критериям.</p>
+            {% endif %}
+        </div>
+    </div>
+    <script>
+    async function updateStatus(event, orderId) {
+        event.preventDefault();
+        const form = event.target;
+        const status = form.status.value;
+        const response = await fetch('/admin/update_order_status', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ order_id: orderId, status })
+        });
+        if (response.ok) {
+            form.closest('.order-card').querySelector('h3').textContent = `Заказ №${orderId} (${status})`;
+        } else {
+            alert('Ошибка обновления статуса');
+        }
+        return false;
+    }
+
+    // Подгружаем имена товаров для всех заказов
+    document.addEventListener('DOMContentLoaded', async () => {
+        const productIdSpans = document.querySelectorAll('.order-card li[data-product-id] .product-name');
+        for (const span of productIdSpans) {
+            const li = span.closest('li[data-product-id]');
+            const productId = li.getAttribute('data-product-id');
+            try {
+                const resp = await fetch(`http://localhost:8003/api/get_product?id=${productId}`);
+                if (resp.ok) {
+                    const product = await resp.json();
+                    span.textContent = `Товар: ${product.name} (ID: ${productId})`;
+                }
+            } catch {}
+        }
+    });
+    </script>
+</body>
+</html>

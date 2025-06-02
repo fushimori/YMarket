@@ -3,12 +3,12 @@ body {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
-    background-color: #f5faff;
+    background-color: #fff6f2;
     color: #333;
 }
 
 header {
-    background-color: #007bff;
+    background-color: #ffab00;
     color: #fff;
     padding: 15px;
     display: flex;
@@ -18,15 +18,19 @@ header {
 }
 
 header a {
-    color: #fff;
+    color: #fff6f2;
     text-decoration: none;
     margin-left: 15px;
-    font-weight: bold;
-    transition: color 0.3s;
+    font-weight: 500;
+    border-radius: 4px;
+    padding: 6px 14px;
+    transition: color 0.2s, background 0.2s;
 }
 
 header a:hover {
-    color: #d1e8ff;
+    color: #ff7043;
+    background: #fff6f2;
+    text-decoration: none;
 }
 
 .container {
@@ -47,7 +51,7 @@ header a:hover {
 .cart-info h1 {
     font-size: 28px;
     margin: 0;
-    color: #007bff;
+    color: #ff7043;
 }
 
 /* Карточки товаров */
@@ -102,18 +106,22 @@ header a:hover {
 }
 
 .create-order-btn {
-    background-color: #007bff; /* Синий цвет */
-    color: #fff;
+    background: linear-gradient(90deg, #ff7043 0%, #ffab91 100%);
+    color: white;
     border: none;
-    padding: 12px 24px;
-    font-size: 18px;
-    border-radius: 5px;
+    border-radius: 6px;
+    padding: 10px 20px;
+    font-size: 16px;
+    font-weight: 600;
     cursor: pointer;
-    transition: background-color 0.3s;
+    box-shadow: 0 2px 8px rgba(255,112,67,0.08);
+    transition: background 0.2s, color 0.2s, box-shadow 0.2s;
 }
 
 .create-order-btn:hover {
-    background-color: #0056b3; /* Темно-синий цвет при наведении */
+    background: linear-gradient(90deg, #ffab91 0%, #ff7043 100%);
+    color: #fff6f2;
+    box-shadow: 0 4px 16px rgba(255,112,67,0.15);
 }
 
 /* Адаптивность */
@@ -127,4 +135,23 @@ header a:hover {
     .item-card {
         width: 100%; /* Одна карточка в ряд */
     }
+}
+
+button, .delete-button {
+    background: linear-gradient(90deg, #ff7043 0%, #ffab91 100%);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 20px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(255,112,67,0.08);
+    transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+}
+
+button:hover, .delete-button:hover {
+    background: linear-gradient(90deg, #ffab91 0%, #ff7043 100%);
+    color: #fff6f2;
+    box-shadow: 0 4px 16px rgba(255,112,67,0.15);
 }

@@ -3,61 +3,92 @@ body {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
-    background-color: #f5faff;
+    background-color: #fff6f2;
     color: #333;
 }
 
 header {
-    background-color: #007bff;
+    background-color: #ffab00;
     color: white;
     padding: 15px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    border-bottom: 3px solid #ff7043;
 }
 
 header a {
-    color: white;
+    color: #fff6f2;
     text-decoration: none;
     margin-left: 15px;
+    font-weight: 500;
+    border-radius: 4px;
+    padding: 6px 14px;
+    transition: color 0.2s, background 0.2s;
 }
 
 header a:hover {
-    text-decoration: underline;
+    color: #ff7043;
+    background: #fff6f2;
+    text-decoration: none;
 }
 
-/* Стили для списка заказов */
-.orders-info {
+button, .status-form button, .orders-list button {
+    background: linear-gradient(90deg, #ff7043 0%, #ffab91 100%);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 20px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(255,112,67,0.08);
+    transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+}
+
+button:hover, .status-form button:hover, .orders-list button:hover {
+    background: linear-gradient(90deg, #ffab91 0%, #ff7043 100%);
+    color: #fff6f2;
+    box-shadow: 0 4px 16px rgba(255,112,67,0.15);
+}
+
+.orders-list a, .orders-list a:visited {
+    color: #ff7043;
+    text-decoration: underline;
+    transition: color 0.2s;
+}
+
+.orders-list a:hover {
+    color: #d84315;
+    text-decoration: none;
+}
+
+.orders-info, .orders-list {
     background-color: white;
-    border-radius: 5px;
-    padding: 20px;
-    margin: 20px auto;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    padding: 24px;
+    margin: 24px auto;
+    box-shadow: 0 4px 16px rgba(255,112,67,0.08);
     max-width: 900px;
 }
 
-.orders-info h1 {
+.orders-info h1, .orders-list h1 {
     font-size: 28px;
     margin-bottom: 20px;
-    color: #007bff;
+    color: #ff7043;
     text-align: center;
 }
 
-.orders-info ul {
-    list-style-type: none;
-    padding: 0;
-}
-
-.orders-info li {
-    background-color: #f9f9f9;
+.orders-info li, .orders-list .order-card {
+    background-color: #fff3e0;
     border-radius: 8px;
     padding: 20px;
     margin-bottom: 20px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 2px 8px rgba(255,112,67,0.05);
     display: flex;
     flex-direction: column;
-    align-items: center;
-    text-align: center;
+    align-items: flex-start;
+    text-align: left;
 }
 
 .orders-info li p {
@@ -84,16 +115,23 @@ header a:hover {
 
 /* Адаптивные стили */
 @media (max-width: 768px) {
-    .orders-info h1 {
+    .orders-info h1, .orders-list h1 {
         font-size: 22px;
     }
-
-    .orders-info li {
+    .orders-info li, .orders-list .order-card {
         font-size: 14px;
     }
-
     .orders-info li .product-image {
         width: 120px; /* Меньший размер изображения для мобильных */
         margin-bottom: 10px;
     }
+}
+
+.brand-red {
+    color: #e53935 !important;
+    font-weight: 900;
+    letter-spacing: 2px;
+    font-size: 2.2rem;
+    margin: 0;
+    text-shadow: 0 2px 8px rgba(229,57,53,0.08);
 }

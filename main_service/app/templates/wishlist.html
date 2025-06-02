@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wishlist</title>
-    <link rel="stylesheet" href="/static/wishlist.css">
+    <link rel="stylesheet" href="../static/wishlist.css">
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
             const email = "{{ email }}";  // Получаем email из шаблона
@@ -48,7 +48,7 @@
             const wishlistContainer = document.getElementById('wishlistContainer');
             wishlistContainer.innerHTML = `
                 <header>
-                    <div><h1>Lakomka</h1></div>
+                    <div><h1 class="brand-red">Ymarket</h1></div>
                     <div>
                         <a href="/">Главная</a>
                         <a href="/logout">Выйти</a>

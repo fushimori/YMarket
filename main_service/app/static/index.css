@@ -2,12 +2,12 @@ body {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
-    background-color: #f5faff;
+    background-color: #fff6f2;
     color: #333;
 }
 
 header {
-    background-color: #007bff;
+    background-color: #ffab00;
     color: #fff;
     padding: 15px;
     display: flex;
@@ -16,55 +16,89 @@ header {
 }
 
 header a {
-    color: #fff;
+    color: #fff6f2;
     text-decoration: none;
     margin-left: 15px;
+    font-weight: 500;
+    border-radius: 4px;
+    padding: 6px 14px;
+    transition: color 0.2s, background 0.2s;
 }
 
 header a:hover {
-    text-decoration: underline;
+    color: #ff7043;
+    background: #fff6f2;
+    text-decoration: none;
 }
 
-.container {
-    max-width: 1200px;
-    margin: 20px auto;
-    padding: 0 15px;
+header h1 {
+    color: #e53935 !important;
+    font-weight: 900;
+    letter-spacing: 2px;
+    font-size: 2.2rem;
+    margin: 0;
+    text-shadow: 0 2px 8px rgba(229,57,53,0.08);
 }
 
-.search-bar {
-    display: flex;
-    margin-bottom: 20px;
+.container, .product-grid, .filters, .search-bar {
+    background: rgba(255,255,255,0.95);
+    border-radius: 18px;
+    box-shadow: 0 4px 24px rgba(229,57,53,0.04), 0 1.5px 6px rgba(255,112,67,0.07);
 }
 
-.search-bar input {
-    flex: 1;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px 0 0 5px;
+.search-bar input, .filters select {
+    background: rgba(255,255,255,0.85);
+    border: 1.5px solid #ffe0b2;
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 1rem;
+    margin-right: 8px;
+    box-shadow: 0 1px 4px rgba(255,112,67,0.07);
+    transition: border 0.2s, box-shadow 0.2s;
 }
 
-.search-bar button {
-    padding: 10px;
-    background-color: #007bff;
-    border: none;
+.search-bar input:focus, .filters select:focus {
+    border: 1.5px solid #ffab00;
+    outline: none;
+    box-shadow: 0 2px 8px rgba(255,112,67,0.13);
+}
+
+.search-bar button, .filters button, #myProductsBtn {
+    background: linear-gradient(90deg, #ffab00 0%, #ff7043 100%);
     color: #fff;
-    border-radius: 0 5px 5px 0;
-    cursor: pointer;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 22px;
+    font-size: 1rem;
+    font-weight: 700;
+    box-shadow: 0 2px 8px rgba(255,112,67,0.10);
+    transition: background 0.2s, box-shadow 0.2s, color 0.2s;
+    margin-left: 8px;
 }
 
-.search-bar button:hover {
-    background-color: #0056b3;
-}
-
-.filters {
-    margin-bottom: 20px;
+.search-bar button:hover, .filters button:hover, #myProductsBtn:hover {
+    background: linear-gradient(90deg, #ff7043 0%, #ffab00 100%);
+    color: #fff6f2;
+    box-shadow: 0 4px 16px rgba(255,112,67,0.18);
 }
 
 .filters select {
-    padding: 10px;
-    margin-right: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
+    min-width: 140px;
+}
+
+@media (max-width: 768px) {
+    .container, .product-grid, .filters, .search-bar {
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(229,57,53,0.06);
+    }
+    .search-bar input, .filters select {
+        font-size: 0.95rem;
+        padding: 10px 8px;
+    }
+    .search-bar button, .filters button, #myProductsBtn {
+        font-size: 0.95rem;
+        padding: 10px 12px;
+    }
 }
 
 .product-grid {
@@ -96,5 +130,52 @@ header a:hover {
 
 .product p {
     font-size: 16px;
-    color: #007bff;
+    color: #ffab00;
+}
+
+h1 {
+    color: #ff7043;
+}
+
+a {
+    color: #ff7043;
+    text-decoration: none;
+    font-weight: 500;
+    border-radius: 4px;
+    padding: 6px 14px;
+    transition: color 0.2s, background 0.2s;
+}
+
+a:hover {
+    color: #fff6f2;
+    background: #ff7043;
+    text-decoration: none;
+}
+
+button {
+    background: linear-gradient(90deg, #ff7043 0%, #ffab91 100%);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 20px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(255,112,67,0.08);
+    transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+}
+
+button:hover {
+    background: linear-gradient(90deg, #ffab91 0%, #ff7043 100%);
+    color: #fff6f2;
+    box-shadow: 0 4px 16px rgba(255,112,67,0.15);
+}
+
+.brand-red {
+    color: #e53935 !important;
+    font-weight: 900;
+    letter-spacing: 2px;
+    font-size: 2.2rem;
+    margin: 0;
+    text-shadow: 0 2px 8px rgba(229,57,53,0.08);
 }

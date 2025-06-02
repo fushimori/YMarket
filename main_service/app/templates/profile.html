@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lakomka</title>
-    <link rel="stylesheet" href="/static/profile.css">
+    <title>Ymarket</title>
+    <link rel="stylesheet" href="../static/profile.css">
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const email = "{{ email }}";  // Получаем email из шаблона
@@ -27,11 +27,29 @@
 
         function renderProfile(profileData) {
             const profileContainer = document.getElementById('profileContainer');
-            if (profileData.role === 'seller') {
+            if (profileData.role === 'admin') {
+                profileContainer.innerHTML = `
+                    <header>
+                        <div><h1 class="brand-red">Ymarket</h1></div>
+                        <div>
+                            <a href="/">Главная</a>
+                            <a href="/logout">Выйти</a>
+                        </div>
+                    </header>
+                    <div class="profile-info">
+                        <h1>Профиль администратора: ${profileData.email}</h1>
+                    </div>
+                    <div class="actions">
+                        <h2><a href="http://localhost:3000/d/cenk6e5aaeqkgf/overview" class="admin-metrics-link">Перейти к метрикам</a></h2>
+                        <h2><a href="/admin/users" class="admin-users-link">Пользователи</a></h2>
+                        <h2><a href="/admin/orders" class="admin-orders-link">Администрирование заказов</a></h2>
+                    </div>
+                `;
+            } else if (profileData.role === 'seller') {
                 const seller = profileData.seller_info || {};
                 profileContainer.innerHTML = `
                     <header>
-                        <div><h1>Lakomka</h1></div>
+                        <div><h1 class="brand-red">Ymarket</h1></div>
                         <div>
                             <a href="/">Главная</a>
                             <a href="/logout">Выйти</a>
@@ -51,7 +69,7 @@
             } else {
                 profileContainer.innerHTML = `
                     <header>
-                        <div><h1>Lakomka</h1></div>
+                        <div><h1 class="brand-red">Ymarket</h1></div>
                         <div>
                             <a href="/">Главная</a>
                             <a href="/logout">Выйти</a>

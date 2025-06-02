@@ -11,15 +11,21 @@ h1 {
 }
 
 a {
-    color: #2980b9;
+    color: #ff7043;
     text-decoration: none;
     display: block;
     text-align: center;
     margin-top: 15px;
+    font-weight: 500;
+    border-radius: 4px;
+    padding: 6px 14px;
+    transition: color 0.2s, background 0.2s;
 }
 
 a:hover {
-    text-decoration: underline;
+    color: #fff6f2;
+    background: #ff7043;
+    text-decoration: none;
 }
 
 form {
@@ -48,14 +54,19 @@ input:focus {
 
 button {
     padding: 10px;
-    background-color: #2980b9;
+    background: linear-gradient(90deg, #ff7043 0%, #ffab91 100%);
     color: white;
     border: none;
-    border-radius: 4px;
+    border-radius: 6px;
     cursor: pointer;
     font-size: 16px;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(255,112,67,0.08);
+    transition: background 0.2s, color 0.2s, box-shadow 0.2s;
 }
 
 button:hover {
-    background-color: #1d6fa5;
+    background: linear-gradient(90deg, #ffab91 0%, #ff7043 100%);
+    color: #fff6f2;
+    box-shadow: 0 4px 16px rgba(255,112,67,0.15);
 }
