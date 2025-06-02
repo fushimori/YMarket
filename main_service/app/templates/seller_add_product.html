@@ -11,7 +11,9 @@
     <form id="singleProductForm" action="/seller/add_product" method="post">
         <input type="text" name="name" placeholder="Название товара" required>
         <input type="number" name="price" placeholder="Цена" required>
-        <input type="text" name="category" placeholder="Категория">
+        <select name="category" id="categorySelect" required>
+            <option value="">Выберите категорию</option>
+        </select>
         <textarea name="description" placeholder="Описание"></textarea>
         <button type="submit">Добавить один товар</button>
     </form>
@@ -30,5 +32,26 @@
         <pre>{{ result }}</pre>
     {% endif %}
     <a href="/profile">Вернуться в профиль</a>
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        loadCategoriesForSeller();
+    });
+
+    async function loadCategoriesForSeller() {
+        try {
+            const response = await fetch('http://localhost:8003/api/categories');
+            const categories = await response.json();
+            const select = document.getElementById('categorySelect');
+            categories.forEach(category => {
+                const option = document.createElement('option');
+                option.value = category.id;
+                option.textContent = category.name;
+                select.appendChild(option);
+            });
+        } catch (error) {
+            console.error('Ошибка загрузки категорий:', error);
+        }
+    }
+    </script>
 </body>
 </html> 

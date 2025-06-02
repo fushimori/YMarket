@@ -325,7 +325,7 @@ async def seller_add_product(request: Request, client: httpx.AsyncClient = Depen
         # Добавление одного товара
         name = form.get("name")
         price = form.get("price")
-        category = form.get("category")
+        category_id = form.get("category")
         description = form.get("description")
         # Получаем seller_id из куки или профиля (тут пример — доработать под свою авторизацию)
         jwt_token = request.cookies.get("access_token")
@@ -347,7 +347,7 @@ async def seller_add_product(request: Request, client: httpx.AsyncClient = Depen
             "seller_id": seller_id,
             "stock": 1,           # по умолчанию 1
             "active": True,       # по умолчанию True
-            "category_id": 1      # временно, если нет выбора категории
+            "category_id": int(category_id) if category_id else 1
         }
         response = await client.post(f"{CATALOG_SERVICE_URL}/products", json=product_data)
         result = response.json()
