@@ -56,7 +56,7 @@ async def get_product_by_id(db: AsyncSession, product_id: int):
         "category_id": product.category_id,
         "seller_id": product.seller_id,
         "category": {"id": product.category.id, "name": product.category.name} if product.category else None,
-        "images": None
+        "images": []  # Возвращаем пустой список вместо None
     }
 
     return products_dict
@@ -110,7 +110,6 @@ async def create_product(db: AsyncSession, name: str, description: str, price: f
     return loaded_product.scalar_one_or_none()
 
 # Обновление продукта
-# Обновление продукта
 @db_metrics(operation="update_product")
 async def update_product(db: AsyncSession, product_id: int, name: str, description: str, price: float, stock: int):
     # Получаем продукт по ID как SQLAlchemy-модель, с жадной загрузкой отношений
@@ -137,13 +136,21 @@ async def update_product(db: AsyncSession, product_id: int, name: str, descripti
     await db.commit()
     await db.refresh(product_model)
 
-    # Явное преобразование в словарь
-    loaded_product = await db.execute(
-        select(Product)
-        .options(selectinload(Product.category), selectinload(Product.images))
-        .filter(Product.id == product_model.id)
-    )
-    return loaded_product.scalar_one_or_none()
+    # Преобразуем в словарь для возврата
+    product_dict = {
+        "id": product_model.id,
+        "name": product_model.name,
+        "description": product_model.description,
+        "price": product_model.price,
+        "stock": product_model.stock,
+        "category_id": product_model.category_id,
+        "seller_id": product_model.seller_id,
+        "active": product_model.active,
+        "category": {"id": product_model.category.id, "name": product_model.category.name} if product_model.category else None,
+        "images": []  # Возвращаем пустой список вместо None
+    }
+
+    return product_dict
 
 
 # Удаление товара
