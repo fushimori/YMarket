@@ -99,6 +99,9 @@ services:
       - discovery.type=single-node
       - xpack.security.enabled=false
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - ELASTICSEARCH_HOST=elasticsearch
+      - ELASTICSEARCH_PORT=9200
+      - KAFKA_BROKERS=kafka:9092
     ports:
       - "9200:9200"
     volumes:
@@ -229,6 +232,8 @@ services:
       - "3000:3000"
     volumes:
       - grafana_data:/var/lib/grafana
+      - ./analysis_service/app/grafana/provisioning:/etc/grafana/provisioning
+      - ./analysis_service/app/grafana/dashboards:/etc/grafana/provisioning/dashboards
     networks:
       - mynetwork
 
@@ -251,7 +256,7 @@ services:
       - xpack.security.transport.ssl.enabled=false
       - ES_JAVA_OPTS=-Xms512m -Xmx512m
     ports:
-      - "9201:9200"
+      - "9201:9201"
     volumes:
       - ./catalog_service/app/search/synonyms.txt:/usr/share/elasticsearch/config/synonyms.txt
     networks:
@@ -259,13 +264,13 @@ services:
 
 
   kibana:
-    image: kibana:8.12.1
+    image: kibana:7.17.10
     ports:
       - "5601:5601"
     depends_on:
-      - elasticsearch_engine
+      - elasticsearch
     environment:
-      - ELASTICSEARCH_HOSTS=http://elasticsearch_engine:9200
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
     networks:
       - mynetwork
 
