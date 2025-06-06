@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from typing import Dict, Any, List
 from datetime import datetime, timedelta
 from storage.elastic_client import ElasticClient
+from http import HTTPStatus
 
 router = APIRouter()
 
@@ -22,7 +23,7 @@ async def get_logs(service_name: str, elastic_client: ElasticClient = Depends(ge
         return logs
     except Exception as e:
         print(f"Error getting service logs: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=str(e))
 
 @router.get("/logs/errors/{service_name}")
 async def get_error_logs(service_name: str, elastic_client: ElasticClient = Depends(get_elastic_client)):
@@ -36,4 +37,4 @@ async def get_error_logs(service_name: str, elastic_client: ElasticClient = Depe
         return logs
     except Exception as e:
         print(f"Error getting error logs: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e)) 
+        raise HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=str(e)) 

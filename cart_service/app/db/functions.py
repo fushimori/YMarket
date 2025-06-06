@@ -29,7 +29,6 @@ async def get_cart_items(db: AsyncSession, user_id: int):
         {"product_id": item.product_id, "quantity": item.quantity}
         for item in cart_items
     ]
-    print("DEBUG: cart items: ", items)
 
     return items
 
@@ -44,7 +43,6 @@ async def get_cart_by_user_id(db: AsyncSession, user_id: int):
 async def add_product_to_cart(db: AsyncSession, user_id: int, product_id: int, quantity: int = 1):
     # Проверим, есть ли корзина для данного пользователя
     cart = await get_cart_by_user_id(db, user_id)
-    print("DEBUG CART SERVICE add_product_to_cart, cart: ", cart)
     if not cart:
         # Если корзины нет, создадим новую
         cart = Cart(user_id=user_id)

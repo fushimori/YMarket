@@ -19,6 +19,7 @@ import jwt
 import httpx
 import os
 from dotenv import load_dotenv
+from http import HTTPStatus
 
 load_dotenv()
 SECRET_KEY = os.getenv("SECRET_KEY")
@@ -30,10 +31,10 @@ def verify_token(token: str):
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id: int = payload.get("id")
         if user_id is None:
-            raise HTTPException(status_code=401, detail="Invalid token")
+            raise HTTPException(status_code=HTTPStatus.UNAUTHORIZED, detail="Invalid token")
         return user_id
     except Exception as e:
-        raise HTTPException(status_code=401, detail="Invalid token")
+        raise HTTPException(status_code=HTTPStatus.UNAUTHORIZED, detail="Invalid token")
 
 async def lifespan(app: FastAPI) -> AsyncGenerator:
     await init_db()
@@ -101,11 +102,9 @@ async def get_categories(db: AsyncSession = Depends(get_db)):
 @api_metrics()
 @trace_function(name="get_product", include_request=True)
 async def get_product(id: int = None, db: AsyncSession = Depends(get_db)):
-    print("DEBUG CATALOG SERVICE get_product: productid:", id)
     product = await get_product_by_id(db, id)
     if product is None:
         raise HTTPException(status_code=404, detail="Product not found")
-    print("DEBUG CATALOG SERVICE get_product: products: ", product)
     return product
 
 
@@ -114,9 +113,7 @@ async def get_product(id: int = None, db: AsyncSession = Depends(get_db)):
 @api_metrics()
 @trace_function(name="get_seller", include_request=True)
 async def get_seller(id: int = None, db: AsyncSession = Depends(get_db)):
-    print("DEBUG CATALOG SERVICE get_seller: seller_id:", id)
     seller = await get_seller_by_id(db, id)
-    print("DEBUG CATALOG SERVICE get_seller: products: ", seller)
     return seller
 
 

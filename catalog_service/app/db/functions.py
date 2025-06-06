@@ -11,10 +11,8 @@ from metrics import db_metrics
 # Получение всех продуктов с пагинацией
 @db_metrics(operation="get_all_products")
 async def get_all_products(db: AsyncSession, category: int = None, search: str = '', skip: int = 0, limit: int = 1000):
-    # print("DEBUG CATALOG FUNCTION, get_all_products, search", search)
     if category:
         if search != '':
-            print("DEBUG CATALOG FUNCTION, get_all_products, search", search)
             result = await db.execute(
                 select(Product).filter(Product.category_id == category).filter(
                     Product.name.ilike(f"%{search}%")).order_by(Product.name).offset(skip).limit(limit).options(selectinload(Product.images)))

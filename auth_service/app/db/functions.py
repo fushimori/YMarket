@@ -7,6 +7,7 @@ from db.models import User, Wishlist, Order, OrderItem, Seller
 from db.schemas import UserBase, OrderItemBase, OrderBase, SellerRegister
 from sqlalchemy.orm import selectinload
 from metrics import db_metrics
+from http import HTTPStatus
 
 # Функция для получения всех пользователей
 @db_metrics(operation="get_all_users")
@@ -84,7 +85,6 @@ async def get_user_with_details(db: AsyncSession, email: str):
 # Функция для создания нового пользователя
 @db_metrics(operation="create_user")
 async def create_user(db: AsyncSession, user_data: dict):
-    print("DEBUG: auth function create_user, user_data:", user_data)
     db_user = User(
         email=user_data['email'],
         hashed_password=user_data['hashed_password'],
@@ -243,5 +243,5 @@ async def get_seller_by_user_id(db: AsyncSession, user_id: int):
     seller_result = await db.execute(select(Seller).filter(Seller.user_id == user_id))
     seller = seller_result.scalar_one_or_none()
     if not seller:
-        raise HTTPException(status_code=404, detail="Seller not found")
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="Seller not found")
     return seller

@@ -16,6 +16,7 @@ from metrics.tracing_decorator import trace_function
 
 import os
 from dotenv import load_dotenv
+from http import HTTPStatus
 
 load_dotenv()  # Загружает переменные из .env
 
@@ -49,9 +50,9 @@ def decode_jwt(token: str) -> str:
         email = payload.get("sub")
         return email
     except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Token has expired")
+        raise HTTPException(status_code=HTTPStatus.UNAUTHORIZED, detail="Token has expired")
     except jwt.InvalidTokenError:
-        raise HTTPException(status_code=401, detail="Invalid token")
+        raise HTTPException(status_code=HTTPStatus.UNAUTHORIZED, detail="Invalid token")
 
 @app.get("/metrics")
 @trace_function(name="get_metrics", include_request=True)
@@ -73,9 +74,7 @@ async def read_home(request: Request):
         else:
             email = None
     except HTTPException as e:
-        print(f"DEBUG main service: JWT error - {e.detail}")
         email = None
-    print("DEBUG: main_service check cookies: email - ", email)
 
     return templates.TemplateResponse("index.html", {"request": request, "email": email})
 
@@ -87,19 +86,16 @@ async def get_profile(request: Request):
     jwt_token = request.cookies.get("access_token")
     
     if not jwt_token:
-        print("DEBUG: No JWT token found in cookies")
         return RedirectResponse(url="/login", status_code=303)
 
     try:
         email = decode_jwt(jwt_token)
         if not email:
             raise HTTPException(
-                status_code=401,
+                status_code=HTTPStatus.UNAUTHORIZED,
                 detail="Invalid token: email not found"
             )
-        print(f"DEBUG: Decoded JWT token for email: {email}")
     except HTTPException as e:
-        print(f"DEBUG: JWT decoding error: {e.detail}")
         return RedirectResponse(url="/login", status_code=303)
 
     return templates.TemplateResponse("profile.html", {"request": request, "email": email, "token": jwt_token})
@@ -112,19 +108,16 @@ async def get_cart(request: Request):
     jwt_token = request.cookies.get("access_token")
     
     if not jwt_token:
-        print("DEBUG: No JWT token found in cookies")
         return RedirectResponse(url="/login", status_code=303)
 
     try:
         email = decode_jwt(jwt_token)
         if not email:
             raise HTTPException(
-                status_code=401,
+                status_code=HTTPStatus.UNAUTHORIZED,
                 detail="Invalid token: email not found"
             )
-        print(f"DEBUG: Decoded JWT token for email: {email}")
     except HTTPException as e:
-        print(f"DEBUG: JWT decoding error: {e.detail}")
         return RedirectResponse(url="/login", status_code=303)
 
     return templates.TemplateResponse("cart.html", {"request": request, "email": email, "token": jwt_token})
@@ -137,19 +130,16 @@ async def get_wishlist(request: Request):
     jwt_token = request.cookies.get("access_token")
     
     if not jwt_token:
-        print("DEBUG: No JWT token found in cookies")
         return RedirectResponse(url="/login", status_code=303)
 
     try:
         email = decode_jwt(jwt_token)
         if not email:
             raise HTTPException(
-                status_code=401,
+                status_code=HTTPStatus.UNAUTHORIZED,
                 detail="Invalid token: email not found"
             )
-        print(f"DEBUG: Decoded JWT token for email: {email}")
     except HTTPException as e:
-        print(f"DEBUG: JWT decoding error: {e.detail}")
         return RedirectResponse(url="/login", status_code=303)
 
     return templates.TemplateResponse("wishlist.html", {"request": request, "email": email})
@@ -162,19 +152,16 @@ async def get_orders(request: Request):
     jwt_token = request.cookies.get("access_token")
     
     if not jwt_token:
-        print("DEBUG: No JWT token found in cookies")
         return RedirectResponse(url="/login", status_code=303)
 
     try:
         email = decode_jwt(jwt_token)
         if not email:
             raise HTTPException(
-                status_code=401,
+                status_code=HTTPStatus.UNAUTHORIZED,
                 detail="Invalid token: email not found"
             )
-        print(f"DEBUG: Decoded JWT token for email: {email}")
     except HTTPException as e:
-        print(f"DEBUG: JWT decoding error: {e.detail}")
         return RedirectResponse(url="/login", status_code=303)
 
     return templates.TemplateResponse("orders.html", {"request": request, "email": email})
@@ -227,7 +214,6 @@ async def register(request: Request, email: str = Form(...), password: str = For
 @trace_function(name="login_action", include_request=True)
 async def login_action(request: Request, email: str = Form(...), password: str = Form(...), client: httpx.AsyncClient = Depends(get_http_client)):
     """Send a login request to the auth service."""
-    print("DEBUG: main_service in post login")
     try:
         response = await client.post(
             f"{AUTH_SERVICE_URL}/login",
@@ -403,12 +389,12 @@ async def seller_edit_product_page(request: Request, id: int, client: httpx.Asyn
 async def seller_update_product(request: Request, id: int = Form(...), name: str = Form(...), price: float = Form(...), description: str = Form(None), stock: int = Form(None), client: httpx.AsyncClient = Depends(get_http_client)):
     jwt_token = request.cookies.get("access_token")
     if not jwt_token:
-        raise HTTPException(status_code=401, detail="Необходима авторизация")
+        raise HTTPException(status_code=HTTPStatus.UNAUTHORIZED, detail="Необходима авторизация")
     try:
         payload = jwt.decode(jwt_token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id = payload.get("id")
     except Exception:
-        raise HTTPException(status_code=401, detail="Ошибка авторизации")
+        raise HTTPException(status_code=HTTPStatus.UNAUTHORIZED, detail="Ошибка авторизации")
 
     # Получаем информацию о товаре, чтобы проверить владельца
     product_resp = await client.get(f"{CATALOG_SERVICE_URL}/api/get_product?id={id}")
@@ -417,7 +403,7 @@ async def seller_update_product(request: Request, id: int = Form(...), name: str
     product_data_from_db = product_resp.json()
 
     if product_data_from_db.get("seller_id") != user_id:
-        raise HTTPException(status_code=403, detail="У вас нет прав на изменение этого товара")
+        raise HTTPException(status_code=HTTPStatus.FORBIDDEN, detail="У вас нет прав на изменение этого товара")
 
     update_data = {
         "id": id,
@@ -467,12 +453,12 @@ async def seller_metrics_page(request: Request, client: httpx.AsyncClient = Depe
 async def seller_delete_product(request: Request, id: int = Form(...), client: httpx.AsyncClient = Depends(get_http_client)):
     jwt_token = request.cookies.get("access_token")
     if not jwt_token:
-        raise HTTPException(status_code=401, detail="Необходима авторизация")
+        raise HTTPException(status_code=HTTPStatus.UNAUTHORIZED, detail="Необходима авторизация")
     try:
         payload = jwt.decode(jwt_token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id = payload.get("id")
     except Exception:
-        raise HTTPException(status_code=401, detail="Ошибка авторизации")
+        raise HTTPException(status_code=HTTPStatus.UNAUTHORIZED, detail="Ошибка авторизации")
 
     # Получаем информацию о товаре, чтобы проверить владельца
     product_resp = await client.get(f"{CATALOG_SERVICE_URL}/api/get_product?id={id}")
@@ -481,7 +467,7 @@ async def seller_delete_product(request: Request, id: int = Form(...), client: h
     product_data_from_db = product_resp.json()
 
     if product_data_from_db.get("seller_id") != user_id:
-        raise HTTPException(status_code=403, detail="У вас нет прав на удаление этого товара")
+        raise HTTPException(status_code=HTTPStatus.FORBIDDEN, detail="У вас нет прав на удаление этого товара")
 
     response = await client.delete(f"{CATALOG_SERVICE_URL}/products/{id}", headers={"Authorization": f"Bearer {jwt_token}"})
 

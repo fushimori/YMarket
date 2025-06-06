@@ -20,6 +20,7 @@ from config.tracing import setup_tracing
 from metrics.tracing_decorator import trace_function
 import os
 from dotenv import load_dotenv
+from http import HTTPStatus
 
 
 load_dotenv()
@@ -33,10 +34,10 @@ def verify_token(token: str):
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id: int = payload.get("id")
         if user_id is None:
-            raise HTTPException(status_code=401, detail="Invalid token")
+            raise HTTPException(status_code=HTTPStatus.UNAUTHORIZED, detail="Invalid token")
         return user_id
     except Exception as e:
-        raise HTTPException(status_code=401, detail="Invalid token")
+        raise HTTPException(status_code=HTTPStatus.UNAUTHORIZED, detail="Invalid token")
 
 
 async def lifespan(app: FastAPI) -> AsyncGenerator:
@@ -71,28 +72,22 @@ async def metrics():
 async def add_to_cart(product_id: int = None, token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)):
     user_id = verify_token(token)
     cart = await add_product_to_cart(db, user_id, product_id)
-    print("DEBUG CART SERVICE add_to_cart, user_id:", user_id, "token:", token)# Получаем user_id из токена
-    print("DEBUG CART SERVICE add_to_cart, cart:", cart)
+
     # Здесь логика добавления товара в корзину для user_id
     if cart:
         return {"success": True, "message": "Product added to cart"}
     else:
         raise HTTPException(status_code=500, detail="Failed to add product to cart")
 
-# убрать обращение к бд здесь
 @app.get("/check_cart")
 @api_metrics()
 @trace_function(name="check_cart", include_request=True)
 async def check_cart(product_id: int = None, token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)):
-    user_id = verify_token(token)  # Проверка токена
-    print("DEBUG CART SERVICE check_cart, user_id: ", user_id)
-    # Проверка, есть ли корзина у пользователя
+    user_id = verify_token(token)
     cart = await get_cart_by_user_id(db, user_id)
-    print("DEBUG CART SERVICE check_cart, cart: ", cart)
     if not cart:
         return {"exists": False}
 
-    # Проверка, есть ли товар в корзине
     cart_item = await db.execute(
         select(CartItem).filter(
             CartItem.product_id == product_id,
@@ -100,7 +95,6 @@ async def check_cart(product_id: int = None, token: str = Depends(oauth2_scheme)
         )
     )
     cart_item = cart_item.scalar_one_or_none()
-    print("DEBUG CART SERVICE check_cart, cart_item: ", cart_item)
 
     if cart_item:
         return {"exists": True}
@@ -113,9 +107,6 @@ async def check_cart(product_id: int = None, token: str = Depends(oauth2_scheme)
 async def delete_from_cart(product_id: int = None, token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)):
     user_id = verify_token(token)
     cart = await remove_product_from_cart(db, user_id, product_id)
-    print("DEBUG CART SERVICE delete_from_cart, user_id:", user_id, "token:", token)# Получаем user_id из токена
-    print("DEBUG CART SERVICE delete_from_cart, cart:", cart)
-    # Здесь логика добавления товара в корзину для user_id
     if cart:
         return {"success": True, "message": "Product delete from cart"}
     else:
@@ -137,8 +128,6 @@ async def create_order(token: str = Depends(oauth2_scheme), db: AsyncSession = D
 
         if not cart_data:
             return {"error": "Cart not found"}
-        else:
-            print("DEBUG CART SERVICE create_order, cart_data:", cart_data)
 
         headers = {
             "Authorization": f"Bearer {token}",
@@ -155,26 +144,7 @@ async def create_order(token: str = Depends(oauth2_scheme), db: AsyncSession = D
 
         order_id = order_response.json().get("order_id")
 
-        # Шаг 1: Запрос к сервису оплаты
-        # payment_response = requests.post(
-        #     "http://localhost:8005/transactions/",
-        #     json={
-        #         "order_id": order_response["order_id"],  # Пример заказа (замените на реальный ID)
-        #         "payment_method": "credit_card",  # или другой способ оплаты
-        #         "amount": 100,  # Замените на сумму заказа
-        #         "payment_reference": "some-reference-id"
-        #     }
-        # )
-        # if payment_response.status_code != 200:
-        #     raise HTTPException(status_code=502, detail="Payment service error")
-        #
-        # payment_result = payment_response.json()
-        # if payment_result.get("status") != "COMPLETED":
-        #     return JSONResponse(status_code=400, content={"message": "Payment failed"})
-
-        # Шаг 2: Запрос к корзине для формирования заказа
         if order_id:
-            # Уменьшаем stock у каждого товара
             for item in cart_data["cart_items"]:
                 try:
                     requests.post(
@@ -197,10 +167,8 @@ async def create_order(token: str = Depends(oauth2_scheme), db: AsyncSession = D
 @trace_function(name="get_cart", include_request=True)
 async def get_cart(user_id: int, db: AsyncSession = Depends(get_db)):
     items = await get_cart_items(db, user_id)
-    print("DEBUG: cart items: ", items)
     return items
 
-# Добавление товара в корзину
 @app.post("/cart/{user_id}", response_model=CartResponse)
 @api_metrics()
 @trace_function(name="add_to_cart_post", include_request=True)
@@ -208,19 +176,12 @@ async def add_to_cart(user_id: int, product: CartItemBase, db: AsyncSession = De
     cart = await add_product_to_cart(db, user_id, product.product_id, product.quantity)
     return cart
 
-# Обновление количества товара в корзине
 @app.put("/cart/{user_id}/{product_id}", response_model=CartResponse)
 @api_metrics()
 @trace_function(name="update_cart_item_quantity", include_request=True)
 async def update_cart_item_quantity(user_id: int, product_id: int, quantity: int, db: AsyncSession = Depends(get_db)):
     cart = await update_product_quantity_in_cart(db, user_id, product_id, quantity)
     return cart
-
-# # Удаление товара из корзины
-# @app.delete("/cart/{user_id}/{product_id}", response_model=CartResponse)
-# async def remove_from_cart(user_id: int, product_id: int, db: AsyncSession = Depends(get_db)):
-#     cart = await remove_product_from_cart(db, user_id, product_id)
-#     return cart
 
 @app.get("/")
 @api_metrics()
