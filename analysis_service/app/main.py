@@ -54,14 +54,14 @@ async def startup_event():
         logging.error(f"Failed to initialize index manager: {str(e)}")
         raise
     
-    # Закомментируем запуск Kafka consumer
-    # try:
-    #     # Запуск Kafka consumer
-    #     consumer = KafkaLogConsumer()
-    #     await consumer.start()
-    # except Exception as e:
-    #     logging.error(f"Failed to start Kafka consumer: {str(e)}")
-    #     raise
+    # Запуск Kafka consumer
+    try:
+        consumer = KafkaLogConsumer()
+        # Запускаем consumer в фоне, чтобы не блокировать основной поток
+        asyncio.create_task(consumer.start())
+    except Exception as e:
+        logging.error(f"Failed to start Kafka consumer: {str(e)}")
+        raise
 
 @app.on_event("shutdown")
 @api_metrics()
@@ -69,14 +69,13 @@ async def shutdown_event():
     """
     Остановка потребителя при завершении работы приложения
     """
-    # Закомментируем остановку Kafka consumer
-    # try:
-    #     # Остановка Kafka consumer
-    #     consumer = KafkaLogConsumer()
-    #     await consumer.stop()
-    # except Exception as e:
-    #     logging.error(f"Failed to stop Kafka consumer: {str(e)}")
-    #     raise
+    try:
+        # Остановка Kafka consumer
+        consumer = KafkaLogConsumer()
+        await consumer.stop()
+    except Exception as e:
+        logging.error(f"Failed to stop Kafka consumer: {str(e)}")
+        raise
 
 @app.get("/health")
 @api_metrics()
