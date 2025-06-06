@@ -155,15 +155,10 @@ async def update_existing_product(
     product_id: int, product: ProductBase, token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)
 ):
     user_id = verify_token(token)
-
     existing_product = await get_product_by_id(db, product_id)
     if not existing_product:
         raise HTTPException(status_code=404, detail="Product not found")
-
-    if existing_product['seller_id'] != user_id:
-        raise HTTPException(status_code=403, detail="You do not have permission to update this product")
-
-    # Передаем параметры из объекта product в функцию update_product
+    check_seller_permission(existing_product, user_id)
     updated_product = await update_product(
         db,
         product_id,
@@ -184,41 +179,25 @@ async def update_existing_product(
 @trace_function(name="delete_existing_product", include_request=True)
 async def delete_existing_product(product_id: int, token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)):
     user_id = verify_token(token)
-
     existing_product = await get_product_by_id(db, product_id)
     if not existing_product:
-
         raise HTTPException(status_code=404, detail="Product not found")
-
-    if existing_product['seller_id'] != user_id:
-        raise HTTPException(status_code=403, detail="You do not have permission to delete this product")
-
+    check_seller_permission(existing_product, user_id)
     deleted_product_id = await delete_product(db, product_id)
     if not deleted_product_id:
         raise HTTPException(status_code=500, detail="Failed to delete product")
-    
     return {"message": f"Product with ID {deleted_product_id} deleted successfully"}
 
 @app.post("/api/products/decrement_stock")
 @log_to_kafka
 @api_metrics()
 @trace_function(name="decrement_stock", include_request=True)
-async def decrement_stock(
+async def decrement_stock_endpoint(
     product_id: int = Body(...),
     quantity: int = Body(...),
     db: AsyncSession = Depends(get_db)
 ):
-    # Получаем продукт
-    result = await db.execute(select(Product).filter(Product.id == product_id))
-    product = result.scalar_one_or_none()
-    if not product:
-        raise HTTPException(status_code=404, detail="Product not found")
-    if product.stock < quantity:
-        raise HTTPException(status_code=400, detail="Not enough stock")
-    product.stock -= quantity
-    await db.commit()
-    await db.refresh(product)
-    return {"success": True, "product_id": product_id, "new_stock": product.stock}
+    return await decrement_stock(db, product_id, quantity)
 
 @app.post("/admin_delete_product")
 @log_to_kafka
@@ -236,9 +215,6 @@ async def admin_delete_product(request: Request, db: AsyncSession = Depends(get_
         role = payload.get("role")
     except Exception:
         raise HTTPException(status_code=401, detail="Invalid token")
-    print(role)
     if role not in ("admin", "RoleEnum.admin"):
         raise HTTPException(status_code=403, detail="Only admin can delete products")
-    # Удаляем товар
-    deleted_product_id = await delete_product(db, product_id)
-    return {"success": True, "deleted_product_id": deleted_product_id}
+    return await admin_delete_product_logic(db, product_id)

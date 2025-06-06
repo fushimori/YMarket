@@ -168,3 +168,27 @@ async def delete_product(db: AsyncSession, product_id: int):
     await db.commit()
 
     return product_id # Возвращаем ID удаленного товара
+
+@db_metrics(operation="decrement_stock")
+async def decrement_stock(db: AsyncSession, product_id: int, quantity: int):
+    result = await db.execute(select(Product).filter(Product.id == product_id))
+    product = result.scalar_one_or_none()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    if product.stock < quantity:
+        raise HTTPException(status_code=400, detail="Not enough stock")
+    product.stock -= quantity
+    await db.commit()
+    await db.refresh(product)
+    return {"success": True, "product_id": product_id, "new_stock": product.stock}
+
+
+def check_seller_permission(product: dict, user_id: int):
+    if product['seller_id'] != user_id:
+        raise HTTPException(status_code=403, detail="You do not have permission to modify this product")
+
+
+@db_metrics(operation="admin_delete_product_logic")
+async def admin_delete_product_logic(db: AsyncSession, product_id: int):
+    deleted_product_id = await delete_product(db, product_id)
+    return {"success": True, "deleted_product_id": deleted_product_id}
