@@ -93,29 +93,32 @@ async def get_profile(email: str, db: AsyncSession = Depends(get_db)):
     
     return user_details
 
+@app.post("/register")
+@log_to_kafka
+@api_metrics()
+@trace_function(name="register", include_request=True)
+async def register(request: Request, db: AsyncSession = Depends(get_db)):
+    data = await request.json()
+    return await register_user_logic(db, data)
+
+@app.post("/login")
+@log_to_kafka
+@api_metrics()
+@trace_function(name="login", include_request=True)
+async def login(request: Request, db: AsyncSession = Depends(get_db)):
+    data = await request.json()
+    return await login_user_logic(db, data)
+
 @app.post("/create_order")
 @log_to_kafka
 @api_metrics()
 @trace_function(name="create_order", include_request=True)
 async def create_user_order(request: Request, token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)):
-    try:
-        if token is None:
-            raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail="Authorization token is missing")
-
-        user_id = verify_token(token)
-
-        cart_data = await request.json()
-        
-        order_data = OrderBase(status="pending")
-        order_items = [OrderItemBase(product_id=item["product_id"], quantity=item["quantity"])
-                       for item in cart_data["cart_items"]]
-
-        new_order = await create_order(db, user_id, order_data, order_items)
-
-        return {"order_id": new_order.id}
-
-    except Exception as e:
-        raise HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=str(e))
+    if token is None:
+        raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail="Authorization token is missing")
+    user_id = verify_token(token)
+    cart_data = await request.json()
+    return await create_order_logic(db, user_id, cart_data)
 
 @app.get("/")
 @log_to_kafka
@@ -124,63 +127,6 @@ async def create_user_order(request: Request, token: str = Depends(oauth2_scheme
 async def health_check():
     """Эндпоинт проверки работоспособности."""
     return {"status": "auth_service running"}
-
-@app.post("/register")
-@log_to_kafka
-@api_metrics()
-@trace_function(name="register", include_request=True)
-async def register(request: Request, db: AsyncSession = Depends(get_db)):
-    """Handle user registration."""
-    try:
-        data = await request.json()
-        email = data.get("email")
-        password = data.get("password")
-
-        if not email or not password:
-            raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail="Email and password are required")
-
-        existing_user = await get_user_by_email(db, email)
-        if existing_user:
-            raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail=f"User {email} already exists")
-
-        hashed_password = hash_password(password)
-        new_user = await create_user(db, {"email": email, "hashed_password": hashed_password, "is_active": True})
-        
-        return {"status": "success", "message": f"User {email} successfully registered"}
-    except HTTPException as e:
-        raise e
-    except Exception as e:
-        raise HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=str(e))
-
-@app.post("/login")
-@log_to_kafka
-@api_metrics()
-@trace_function(name="login", include_request=True)
-async def login(request: Request, db: AsyncSession = Depends(get_db)):
-    """Handle user login."""
-    try:
-        data = await request.json()
-        email = data.get("email")
-        password = data.get("password")
-
-        if not email or not password:
-            raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail="Email and password are required")
-
-        user = await get_user_by_email(db, email)
-
-        if user and verify_password(password, user.hashed_password):
-            token = create_access_token({"sub": email, "id": user.id, "role": str(user.role)})
-            return {
-                "status": "success",
-                "message": "Login successful",
-                "token": token,
-            }
-        raise HTTPException(status_code=HTTPStatus.UNAUTHORIZED, detail="Invalid email or password")
-    except HTTPException as e:
-        raise e
-    except Exception as e:
-        raise HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=str(e))
-
 
 @app.post("/register/seller")
 @log_to_kafka
@@ -228,20 +174,7 @@ async def get_seller_info(user_id: int, db: AsyncSession = Depends(get_db)):
 @trace_function(name="edit_user_profile", include_request=True)
 async def edit_user_profile(request: Request, db: AsyncSession = Depends(get_db)):
     data = await request.json()
-    email = data.get("email")
-    loyalty_card_number = data.get("loyalty_card_number")
-    user = await get_user_by_email(db, email)
-    if not user:
-        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="User not found")
-    # Добавляем/обновляем поле loyalty_card_number (если оно есть в модели)
-    if hasattr(user, "loyalty_card_number"):
-        user.loyalty_card_number = loyalty_card_number
-    else:
-        # Если поля нет, можно добавить динамически (или проигнорировать)
-        pass
-    await db.commit()
-    await db.refresh(user)
-    return {"success": True}
+    return await edit_user_profile_logic(db, data)
 
 @app.post("/profile/edit_seller")
 @log_to_kafka
@@ -249,23 +182,7 @@ async def edit_user_profile(request: Request, db: AsyncSession = Depends(get_db)
 @trace_function(name="edit_seller_profile", include_request=True)
 async def edit_seller_profile(request: Request, db: AsyncSession = Depends(get_db)):
     data = await request.json()
-    email = data.get("email")
-    shop_name = data.get("shop_name")
-    inn = data.get("inn")
-    description = data.get("description")
-    user = await get_user_by_email(db, email)
-    if not user:
-        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="User not found")
-    seller_result = await db.execute(select(Seller).filter(Seller.user_id == user.id))
-    seller = seller_result.scalar_one_or_none()
-    if not seller:
-        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="Seller not found")
-    seller.shop_name = shop_name
-    seller.inn = inn
-    seller.description = description
-    await db.commit()
-    await db.refresh(seller)
-    return {"success": True}
+    return await edit_seller_profile_logic(db, data)
 
 @app.get("/api/users")
 @log_to_kafka
@@ -315,15 +232,13 @@ async def admin_delete_user(request: Request, db: AsyncSession = Depends(get_db)
         raise HTTPException(status_code=HTTPStatus.UNAUTHORIZED, detail="Invalid token")
     if role not in ("admin", "RoleEnum.admin"):
         raise HTTPException(status_code=HTTPStatus.FORBIDDEN, detail="Only admin can delete users")
-    await delete_user(db, user_id)
-    return {"success": True}
+    return await admin_delete_user_logic(db, user_id)
 
 @app.get("/admin/orders")
 @log_to_kafka
 @api_metrics()
 @trace_function(name="admin_get_orders", include_request=True)
 async def admin_get_orders(request: Request, search: str = '', status: str = '', db: AsyncSession = Depends(get_db)):
-    # Проверка роли админа по токену
     token = request.headers.get("Authorization")
     if not token or not token.startswith("Bearer "):
         raise HTTPException(status_code=HTTPStatus.UNAUTHORIZED, detail="Missing or invalid token")
@@ -335,32 +250,7 @@ async def admin_get_orders(request: Request, search: str = '', status: str = '',
         raise HTTPException(status_code=HTTPStatus.UNAUTHORIZED, detail="Invalid token")
     if role not in ("admin", "RoleEnum.admin"):
         raise HTTPException(status_code=HTTPStatus.FORBIDDEN, detail="Only admin can view orders")
-
-    # Получаем все заказы с пользователями и товарами
-    query = select(Order).options(selectinload(Order.order_items), selectinload(Order.user))
-    if status:
-        query = query.filter(Order.status == status)
-    result = await db.execute(query)
-    orders = result.scalars().all()
-
-    # Фильтрация по email пользователя (если search)
-    orders_data = []
-    for order in orders:
-        user_email = order.user.email if order.user else ""
-        if search and search.lower() not in user_email.lower():
-            continue
-        items = []
-        for item in order.order_items:
-            items.append({
-                "product_id": item.product_id,
-                "quantity": item.quantity
-            })
-        orders_data.append({
-            "order_id": order.id,
-            "status": order.status,
-            "user_email": user_email,
-            "items": items
-        })
+    orders_data = await admin_get_orders_logic(db, search, status)
     return JSONResponse(content=orders_data)
 
 @app.post("/admin/update_order_status")
@@ -382,12 +272,4 @@ async def admin_update_order_status(request: Request, db: AsyncSession = Depends
         raise HTTPException(status_code=HTTPStatus.UNAUTHORIZED, detail="Invalid token")
     if role not in ("admin", "RoleEnum.admin"):
         raise HTTPException(status_code=HTTPStatus.FORBIDDEN, detail="Only admin can update order status")
-    # Обновляем статус заказа
-    result = await db.execute(select(Order).filter(Order.id == order_id))
-    order = result.scalar_one_or_none()
-    if not order:
-        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="Order not found")
-    order.status = status
-    await db.commit()
-    await db.refresh(order)
-    return {"success": True}
+    return await admin_update_order_status_logic(db, order_id, status)
