@@ -119,47 +119,7 @@ async def delete_from_cart(product_id: int = None, token: str = Depends(oauth2_s
 @api_metrics()
 @trace_function(name="create_order", include_request=True)
 async def create_order(token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)):
-    if not token:
-        raise HTTPException(status_code=401, detail="Invalid token")
-
-    try:
-        user_id = verify_token(token)
-        cart_data = await get_cart_with_items(db, user_id)
-
-        if not cart_data:
-            return {"error": "Cart not found"}
-
-        headers = {
-            "Authorization": f"Bearer {token}",
-            "Content-Type": "application/json"
-        }
-
-        order_response = requests.post(
-            "http://auth_service:8001/create_order",
-            headers=headers,
-            json=cart_data
-        )
-        if order_response.status_code != 200:
-            raise HTTPException(status_code=502, detail="Order service error")
-
-        order_id = order_response.json().get("order_id")
-
-        if order_id:
-            for item in cart_data["cart_items"]:
-                try:
-                    requests.post(
-                        "http://catalog_service:8003/api/products/decrement_stock",
-                        json={"product_id": item["product_id"], "quantity": item["quantity"]},
-                        timeout=3
-                    )
-                except Exception as e:
-                    print(f"Ошибка уменьшения stock для товара {item['product_id']}: {e}")
-            await clear_user_cart(db, user_id)
-
-        return {"message": "Order created successfully"}
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return await create_order_logic(token, db)
 
 
 @app.get("/cart/{user_id}")
