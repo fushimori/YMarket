@@ -340,3 +340,46 @@ async def admin_update_order_status_logic(db: AsyncSession, order_id: int, statu
     await db.commit()
     await db.refresh(order)
     return {"success": True}
+
+async def get_users_for_admin_logic(db: AsyncSession, search: str = '', role: str = ''):
+    from db.models import User, Seller
+    from sqlalchemy.future import select
+    query = select(User)
+    if search:
+        query = query.filter(User.email.ilike(f"%{search}%"))
+    if role:
+        query = query.filter(User.role == role)
+    result = await db.execute(query)
+    users = result.scalars().all()
+    users_data = []
+    for user in users:
+        user_dict = {
+            "id": user.id,
+            "email": user.email,
+            "role": str(user.role),
+            "is_active": user.is_active
+        }
+        if user.role == 'seller':
+            seller_result = await db.execute(select(Seller).filter(Seller.user_id == user.id))
+            seller = seller_result.scalar_one_or_none()
+            if seller:
+                user_dict["seller_info"] = {"shop_name": seller.shop_name}
+        users_data.append(user_dict)
+    return users_data
+
+async def register_seller_logic(db: AsyncSession, data: dict):
+    from auth_utils import hash_password
+    from db.schemas import SellerRegister
+    password = data.get("password")
+    if not password:
+        raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail="Password is required")
+    hashed_password = hash_password(password)
+    seller_data = SellerRegister(
+        email=data.get("email"),
+        password=hashed_password,
+        shop_name=data.get("shop_name"),
+        inn=data.get("inn"),
+        description=data.get("description")
+    )
+    user, seller = await register_seller(db, seller_data)
+    return {"status": "success", "message": f"Seller {user.email} successfully registered", "user_id": user.id, "seller_id": seller.id}

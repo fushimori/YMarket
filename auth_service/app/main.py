@@ -133,26 +133,8 @@ async def health_check():
 @api_metrics()
 @trace_function(name="register_seller", include_request=True)
 async def register_seller_endpoint(request: Request, db: AsyncSession = Depends(get_db)):
-    """Регистрация продавца (seller)."""
-    try:
-        data = await request.json()
-        password = data.get("password")
-        if not password:
-            raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail="Password is required")
-        hashed_password = hash_password(password)
-        seller_data = SellerRegister(
-            email=data.get("email"),
-            password=hashed_password,
-            shop_name=data.get("shop_name"),
-            inn=data.get("inn"),
-            description=data.get("description")
-        )
-        user, seller = await register_seller(db, seller_data)
-        return {"status": "success", "message": f"Seller {user.email} successfully registered", "user_id": user.id, "seller_id": seller.id}
-    except HTTPException as e:
-        raise e
-    except Exception as e:
-        raise HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=str(e))
+    data = await request.json()
+    return await register_seller_logic(db, data)
 
 @app.get("/api/seller/{user_id}")
 @log_to_kafka
@@ -189,30 +171,7 @@ async def edit_seller_profile(request: Request, db: AsyncSession = Depends(get_d
 @api_metrics()
 @trace_function(name="get_users_for_admin", include_request=True)
 async def get_users_for_admin(search: str = '', role: str = '', db: AsyncSession = Depends(get_db)):
-    query = select(User)
-    if search:
-        query = query.filter(User.email.ilike(f"%{search}%"))
-    if role:
-        query = query.filter(User.role == role)
-    result = await db.execute(query)
-    users = result.scalars().all()
-    users_data = []
-    for user in users:
-        user_dict = {
-            "id": user.id,
-            "email": user.email,
-            "role": str(user.role),
-            "is_active": user.is_active
-        }
-        if user.role == 'seller':
-            seller_result = await db.execute(select(Seller).filter(Seller.user_id == user.id))
-            seller = seller_result.scalar_one_or_none()
-            if seller:
-                user_dict["seller_info"] = {
-                    "shop_name": seller.shop_name
-                }
-        users_data.append(user_dict)
-    return users_data
+    return await get_users_for_admin_logic(db, search, role)
 
 @app.post("/admin_delete_user")
 @log_to_kafka
