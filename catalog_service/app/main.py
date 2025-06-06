@@ -73,7 +73,6 @@ async def read_products(
     seller: int = None,
     db: AsyncSession = Depends(get_db)
 ):
-# print("DEBUG CATALOG SERVICE: seller:", seller, "category:", category)
     if searchquery:  # Если пользователь вводит запрос
         products = await search_products(searchquery)
         if category is not None:
@@ -94,7 +93,6 @@ async def read_products(
 @trace_function(name="get_categories", include_request=True)
 async def get_categories(db: AsyncSession = Depends(get_db)):
     categories = await get_all_categories(db)
-    # print("DEBUG CATALOG SERVICE: categories: ", categories)
     return categories
 
 @app.get("/api/get_product")  # Указываем Pydantic модель для списка продуктов

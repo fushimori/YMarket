@@ -79,7 +79,6 @@ async def get_seller_by_id(db: AsyncSession, seller_id: int):
     # seller_id_list = SellerSchemas.from_orm(seller)
 
     # seller_id_dict = seller_id_list.dict()
-    # print("DEBUG CATALOG FUNCTION, get_product_by_id, products_dict", seller_id_dict)
     # return seller_id_dict
 
 # Создание нового товара
