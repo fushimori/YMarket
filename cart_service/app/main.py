@@ -18,10 +18,13 @@ from logging_decorator import log_to_kafka
 from metrics import metrics_endpoint, api_metrics
 from config.tracing import setup_tracing
 from metrics.tracing_decorator import trace_function
+import os
+from dotenv import load_dotenv
 
 
-SECRET_KEY = "your_secret_key"
-ALGORITHM = "HS256"
+load_dotenv()
+SECRET_KEY = os.getenv("SECRET_KEY")
+ALGORITHM = os.getenv("ALGORITHM")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 

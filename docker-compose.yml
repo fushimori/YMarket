@@ -7,6 +7,8 @@ services:
       - ./main_service/app:/app
     networks:
       - mynetwork
+    env_file:
+      - .env
 
   auth_service:
     build: ./auth_service
@@ -25,6 +27,8 @@ services:
       - ./auth_service/app:/app
     networks:
       - mynetwork
+    env_file:
+      - .env
 
   catalog_service:
     build: ./catalog_service
@@ -42,6 +46,8 @@ services:
       - ./catalog_service/app:/app
     networks:
       - mynetwork
+    env_file:
+      - .env
 
   cart_service:
     build: ./cart_service
@@ -59,6 +65,8 @@ services:
       - ./cart_service/app:/app
     networks:
       - mynetwork
+    env_file:
+      - .env
 
   payment_service:
     build: ./payment_service
@@ -76,6 +84,8 @@ services:
       - ./payment_service/app:/app
     networks:
       - mynetwork
+    env_file:
+      - .env
 
   analysis_service:
     build: ./analysis_service
@@ -92,6 +102,8 @@ services:
       - ./analysis_service/app/tests:/app/tests
     networks:
       - mynetwork
+    env_file:
+      - .env
 
   elasticsearch:
     image: elasticsearch:7.17.10

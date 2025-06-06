@@ -18,10 +18,13 @@ from metrics.tracing_decorator import trace_function
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from fastapi.responses import JSONResponse
+import os
+from dotenv import load_dotenv
 
 
-SECRET_KEY = "your_secret_key"
-ALGORITHM = "HS256"
+SECRET_KEY = os.getenv("SECRET_KEY")
+ALGORITHM = os.getenv("ALGORITHM")
+
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 def verify_token(token: str):

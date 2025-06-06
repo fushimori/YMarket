@@ -14,6 +14,14 @@ from metrics import metrics_endpoint, api_metrics
 from config.tracing import setup_tracing
 from metrics.tracing_decorator import trace_function
 
+import os
+from dotenv import load_dotenv
+
+load_dotenv()  # Загружает переменные из .env
+
+SECRET_KEY = os.getenv("SECRET_KEY")
+ALGORITHM = os.getenv("ALGORITHM")
+
 app = FastAPI()
 
 # Инициализация трейсинга
@@ -29,8 +37,6 @@ CATALOG_SERVICE_URL = "http://catalog_service:8003"
 CART_SERVICE_URL = "http://cart_service:8004"
 PAYMENT_SERVICE_URL = "http://payment_service:8005"
 
-SECRET_KEY = "your_secret_key"
-ALGORITHM = "HS256"
 
 # HTTP client for making requests to other services
 async def get_http_client():

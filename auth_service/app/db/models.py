@@ -1,6 +1,6 @@
 # auth_service/app/db/models.py
 import enum
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Enum, DateTime
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Enum, DateTime, func
 from sqlalchemy.orm import relationship
 from db.database import Base
 from enum import Enum as PyEnum
@@ -47,7 +47,7 @@ class Order(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
-    created_at = Column(DateTime, default=datetime.utcnow)  # Дата создания заказа
+    created_at = Column(DateTime, server_default=func.now())  # Дата создания заказа
     status = Column(String, default="pending")  # Статус заказа
 
     # Связи

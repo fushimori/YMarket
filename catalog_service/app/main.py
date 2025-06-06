@@ -17,9 +17,12 @@ from search.elastic import create_index, index_product, delete_product_from_inde
 from fastapi.security import OAuth2PasswordBearer
 import jwt
 import httpx
+import os
+from dotenv import load_dotenv
 
-SECRET_KEY = "your_secret_key"
-ALGORITHM = "HS256"
+load_dotenv()
+SECRET_KEY = os.getenv("SECRET_KEY")
+ALGORITHM = os.getenv("ALGORITHM")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 def verify_token(token: str):

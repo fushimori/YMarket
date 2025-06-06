@@ -3,9 +3,12 @@ import hashlib
 import hmac
 from datetime import datetime, timedelta
 import jwt
+import os
+from dotenv import load_dotenv
 
-SECRET_KEY = "your_secret_key"
-ALGORITHM = "HS256"
+load_dotenv()
+SECRET_KEY = os.getenv("SECRET_KEY")
+ALGORITHM = os.getenv("ALGORITHM")
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 
